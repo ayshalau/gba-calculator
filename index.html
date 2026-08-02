@@ -171,10 +171,8 @@
   }
   .stub-flt{font-size:15px;color:var(--ink)}
   .stub-flt .tag{font-size:11px;color:var(--muted);letter-spacing:.15em;display:block;text-transform:uppercase;margin-bottom:2px}
-  .stub-seat{font-size:15px;color:var(--ink)}
-  .stub-seat .tag{font-size:11px;color:var(--muted);letter-spacing:.15em;display:block;text-transform:uppercase;margin-bottom:2px}
-  .stub-pay{font-size:15px;color:var(--ink)}
-  .stub-pay .tag{font-size:11px;color:var(--muted);letter-spacing:.15em;display:block;text-transform:uppercase;margin-bottom:2px}
+  .stub-meta{font-size:15px;color:var(--ink)}
+  .stub-meta .tag{font-size:11px;color:var(--muted);letter-spacing:.15em;display:block;text-transform:uppercase;margin-bottom:2px}
   .stub-body{padding:12px 18px}
   .stub-items{width:100%;border-collapse:collapse;font-size:14px}
   .stub-items th{text-align:left;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:4px 0 8px;font-weight:500}
@@ -923,8 +921,9 @@ function renderSales(){
         '</div>'+
         '<div class="stub-top">'+
           '<div class="stub-flt"><span class="tag">Flight</span>'+esc(s.flight)+'</div>'+
-          '<div class="stub-seat"><span class="tag">Seat</span>'+esc(s.seat)+' · '+fmtDate(s.date)+'</div>'+
-          (s.payment ? '<div class="stub-pay"><span class="tag">Pay</span>'+esc(s.payment)+'</div>' : '')+
+          '<div class="stub-meta"><span class="tag">Date</span>'+fmtDate(s.date)+'</div>'+
+          '<div class="stub-meta"><span class="tag">Seat</span>'+esc(s.seat)+'</div>'+
+          (s.payment ? '<div class="stub-meta"><span class="tag">Pay</span>'+esc(s.payment)+'</div>' : '')+
         '</div>'+
         '<div class="stub-body">'+
           '<table class="stub-items"><thead><tr><th>Item</th><th style="text-align:right">Qty</th><th style="text-align:right">Price</th><th style="text-align:right">Total</th></tr></thead><tbody>'+itemsHtml+'</tbody></table>'+
@@ -1074,8 +1073,9 @@ function renderFlights(){
     const saleRows = salesList.map(s=>
       '<div class="stub" style="margin:10px 0 0">'+
         '<div class="stub-top"><div class="stub-flt">'+esc(s.flight)+'</div>'+
-        '<div class="stub-seat"><span class="tag">Seat '+esc(s.seat)+'</span>'+fmtDate(s.date)+'</div>'+
-        (s.payment ? '<div class="stub-pay"><span class="tag">Pay</span>'+esc(s.payment)+'</div>' : '')+
+        '<div class="stub-meta"><span class="tag">Seat</span>'+esc(s.seat)+'</div>'+
+        '<div class="stub-meta"><span class="tag">Date</span>'+fmtDate(s.date)+'</div>'+
+        (s.payment ? '<div class="stub-meta"><span class="tag">Pay</span>'+esc(s.payment)+'</div>' : '')+
         '</div>'+
         '<div class="stub-body">'+s.items.map(it=>esc(it.name)+' ×'+it.qty+' @ '+money(it.unitPrice)).join("<br>")+
           ((s.combo||s.dfDisc)?'<div class="stub-disc">Discounts: −'+money(s.combo+s.dfDisc)+'</div>':"")+
