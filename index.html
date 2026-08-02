@@ -551,8 +551,10 @@ const DEFAULT_CATALOG = [
   {id:"msbn6kja3suhf", name:"Premium Class Upgrade", category:"seats", price:500}
 ];
 
+const CATALOG_VERSION = 2;
+
 let state = load() || { catalog:[], sales:[] };
-if (!state.catalog || !state.catalog.length) { state.catalog = DEFAULT_CATALOG.slice(); save(); }
+if (!state.catalog || !state.catalog.length || (state.catalogVersion || 1) < CATALOG_VERSION) { state.catalog = DEFAULT_CATALOG.slice(); state.catalogVersion = CATALOG_VERSION; save(); }
 
 let editingId = null;
 
