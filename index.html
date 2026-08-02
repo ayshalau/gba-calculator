@@ -923,7 +923,7 @@ function renderSales(){
           '<div class="stub-flt"><span class="tag">Flight</span>'+esc(s.flight)+'</div>'+
           '<div class="stub-meta"><span class="tag">Date</span>'+fmtDate(s.date)+'</div>'+
           '<div class="stub-meta"><span class="tag">Seat</span>'+esc(s.seat)+'</div>'+
-          (s.payment ? '<div class="stub-meta"><span class="tag">Pay</span>'+esc(s.payment)+'</div>' : '')+
+          (s.payment ? '<div class="stub-meta"><span class="tag">Payment</span>'+esc(s.payment)+'</div>' : '')+
         '</div>'+
         '<div class="stub-body">'+
           '<table class="stub-items"><thead><tr><th>Item</th><th style="text-align:right">Qty</th><th style="text-align:right">Price</th><th style="text-align:right">Total</th></tr></thead><tbody>'+itemsHtml+'</tbody></table>'+
@@ -1011,7 +1011,7 @@ function openPdf(s){
         '<span><b>Seat</b> &nbsp;'+esc(s.seat)+'</span>' +
         '<span><b>Date</b> &nbsp;'+fmtDate(s.date)+'</span>' +
         '<span><b>Items</b> &nbsp;'+s.items.reduce((a,i)=>a+i.qty,0)+'</span>' +
-        (s.payment ? '<span><b>Paid by</b> &nbsp;'+esc(s.payment)+'</span>' : '')+
+        (s.payment ? '<span><b>Payment</b> &nbsp;'+esc(s.payment)+'</span>' : '')+
       '</div>' +
       '<table><thead><tr><th>Item</th><th style="text-align:right">Qty</th><th style="text-align:right">Unit price</th><th style="text-align:right">Total</th></tr></thead>' +
       '<tbody>'+itemsHtml+discHtml+'</tbody></table>' +
@@ -1075,7 +1075,7 @@ function renderFlights(){
         '<div class="stub-top"><div class="stub-flt">'+esc(s.flight)+'</div>'+
         '<div class="stub-meta"><span class="tag">Seat</span>'+esc(s.seat)+'</div>'+
         '<div class="stub-meta"><span class="tag">Date</span>'+fmtDate(s.date)+'</div>'+
-        (s.payment ? '<div class="stub-meta"><span class="tag">Pay</span>'+esc(s.payment)+'</div>' : '')+
+        (s.payment ? '<div class="stub-meta"><span class="tag">Payment</span>'+esc(s.payment)+'</div>' : '')+
         '</div>'+
         '<div class="stub-body">'+s.items.map(it=>esc(it.name)+' ×'+it.qty+' @ '+money(it.unitPrice)).join("<br>")+
           ((s.combo||s.dfDisc)?'<div class="stub-disc">Discounts: −'+money(s.combo+s.dfDisc)+'</div>':"")+
