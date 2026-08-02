@@ -169,11 +169,11 @@
     padding:14px 18px;background:var(--panel-2);
     border-bottom:1px dashed var(--line);
   }
-  .stub-flt{font-size:19px;color:var(--gold-soft);letter-spacing:.04em}
+  .stub-flt{font-size:15px;color:var(--ink);letter-spacing:.04em}
   .stub-flt .tag{font-size:11px;color:var(--muted);letter-spacing:.15em;display:block;text-transform:uppercase;margin-bottom:2px}
-  .stub-seat{text-align:right;font-size:15px;color:var(--sky)}
+  .stub-seat{text-align:right;font-size:15px;color:var(--ink)}
   .stub-seat .tag{font-size:11px;color:var(--muted);letter-spacing:.15em;display:block;text-transform:uppercase;margin-bottom:2px}
-  .stub-pay{text-align:right;font-size:14px;color:var(--accent)}
+  .stub-pay{text-align:right;font-size:15px;color:var(--ink)}
   .stub-pay .tag{font-size:11px;color:var(--muted);letter-spacing:.15em;display:block;text-transform:uppercase;margin-bottom:2px}
   .stub-body{padding:12px 18px}
   .stub-items{width:100%;border-collapse:collapse;font-size:14px}
@@ -1071,9 +1071,9 @@ function renderFlights(){
 
     const saleRows = salesList.map(s=>
       '<div class="stub" style="margin:10px 0 0">'+
-        '<div class="stub-top"><div class="stub-flt" style="font-size:15px">'+esc(s.flight)+'</div>'+
-        '<div class="stub-seat" style="font-size:13px"><span class="tag">Seat '+esc(s.seat)+'</span>'+fmtDate(s.date)+'</div>'+
-        (s.payment ? '<div class="stub-pay" style="font-size:12px"><span class="tag">Pay</span>'+esc(s.payment)+'</div>' : '')+
+        '<div class="stub-top"><div class="stub-flt">'+esc(s.flight)+'</div>'+
+        '<div class="stub-seat"><span class="tag">Seat '+esc(s.seat)+'</span>'+fmtDate(s.date)+'</div>'+
+        (s.payment ? '<div class="stub-pay"><span class="tag">Pay</span>'+esc(s.payment)+'</div>' : '')+
         '</div>'+
         '<div class="stub-body">'+s.items.map(it=>esc(it.name)+' ×'+it.qty+' @ '+money(it.unitPrice)).join("<br>")+
           ((s.combo||s.dfDisc)?'<div class="stub-disc">Discounts: −'+money(s.combo+s.dfDisc)+'</div>':"")+
