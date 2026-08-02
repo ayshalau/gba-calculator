@@ -511,12 +511,12 @@ const DEFAULT_CATALOG = [
   {id:"msbm7dqjw8ypg", name:"DF002 GBA 1:200 737-9 飛機模型", category:"gba", price:650},
   {id:"msbm7dwg0so4r", name:"DF003 GBA 毛毯", category:"gba", price:120},
   {id:"msbm7e1rxurgo", name:"DF004 GBA 飛機毛絨公仔", category:"gba", price:120},
-  {id:"msbm7e7enzqzw", name:"DF005 東海好茶 普洱生茶 (8克 × 7)", category:"other", price:110},
-  {id:"msbm7ecjnpmrp", name:"DF006 東海好茶 普洱熟茶 (8克 × 25)", category:"other", price:190},
-  {id:"msbm7ehrr6lqc", name:"DF007 東海好茶 普洱生茶 75配方 (100克)", category:"other", price:230},
-  {id:"msbm7emxd2b6v", name:"DF008 Bottega Gold Prosecco Gold 75cl", category:"special", price:225},
-  {id:"msbmbno8fmg3o", name:"DF009 CHIVAS REGAL12年蘇格蘭威士忌 1L", category:"special", price:325},
-  {id:"msbmbntn1no5b", name:"DF010 MENGZHILAN洋河夢之藍水晶版52度 500cl", category:"special", price:500},
+  {id:"msbm7e7enzqzw", name:"DF005 東海好茶 普洱生茶 (8克 × 7)", category:"duty-free", price:110},
+  {id:"msbm7ecjnpmrp", name:"DF006 東海好茶 普洱熟茶 (8克 × 25)", category:"duty-free", price:190},
+  {id:"msbm7ehrr6lqc", name:"DF007 東海好茶 普洱生茶 75配方 (100克)", category:"duty-free", price:230},
+  {id:"msbm7emxd2b6v", name:"DF008 Bottega Gold Prosecco Gold 75cl", category:"duty-free", price:225},
+  {id:"msbmbno8fmg3o", name:"DF009 CHIVAS REGAL12年蘇格蘭威士忌 1L", category:"duty-free", price:325},
+  {id:"msbmbntn1no5b", name:"DF010 MENGZHILAN洋河夢之藍水晶版52度 500cl", category:"duty-free", price:500},
   {id:"msbmbnykpyce5", name:"DF011 HILX UNFOLD太陽眼鏡 (碳纖黑框 配 銀色鏡片)", category:"duty-free", price:890},
   {id:"msbmbo3l8dwk8", name:"DF012 HILX UNFOLD太陽眼鏡 (啞光灰框 配 綠色鏡片)", category:"duty-free", price:890},
   {id:"msbmbo79exbfh", name:"DF013 HILX UNFOLD太陽眼鏡 (磨砂白框 配 藍色鏡片)", category:"duty-free", price:890},
@@ -549,7 +549,7 @@ const DEFAULT_CATALOG = [
   {id:"msbn6kja3suhf", name:"Premium Class Upgrade", category:"seats", price:500}
 ];
 
-const CATALOG_VERSION = 2;
+const CATALOG_VERSION = 3;
 
 let state = load() || { catalog:[], sales:[] };
 if (!state.catalog || !state.catalog.length || (state.catalogVersion || 1) < CATALOG_VERSION) { state.catalog = DEFAULT_CATALOG.slice(); state.catalogVersion = CATALOG_VERSION; save(); }
