@@ -1,4 +1,4 @@
-const CACHE = "gba-calculator-v2";
+const CACHE = "gba-calculator-v3";
 const ASSETS = [
   "./",
   "index.html",

@@ -81,6 +81,7 @@
 
   /* ---------- forms ---------- */
   .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
   .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   label.field{display:flex;flex-direction:column;gap:6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
   label.field input{
@@ -172,6 +173,8 @@
   .stub-flt .tag{font-size:11px;color:var(--muted);letter-spacing:.15em;display:block;text-transform:uppercase;margin-bottom:2px}
   .stub-seat{text-align:right;font-size:15px;color:var(--sky)}
   .stub-seat .tag{font-size:11px;color:var(--muted);letter-spacing:.15em;display:block;text-transform:uppercase;margin-bottom:2px}
+  .stub-pay{text-align:right;font-size:14px;color:var(--accent)}
+  .stub-pay .tag{font-size:11px;color:var(--muted);letter-spacing:.15em;display:block;text-transform:uppercase;margin-bottom:2px}
   .stub-body{padding:12px 18px}
   .stub-items{width:100%;border-collapse:collapse;font-size:14px}
   .stub-items th{text-align:left;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:4px 0 8px;font-weight:500}
@@ -261,6 +264,7 @@
 
   @media (max-width:768px){
     .grid-3{grid-template-columns:1fr 1fr}
+    .grid-4{grid-template-columns:1fr 1fr}
     .grid-2{grid-template-columns:1fr}
     .logotype{font-size:22px}
     .brand-logo{width:38px;height:38px}
@@ -290,6 +294,7 @@
 
   @media (max-width:520px){
     .grid-3{grid-template-columns:1fr}
+    .grid-4{grid-template-columns:1fr}
     .brand-row{flex-direction:column;align-items:flex-start;gap:4px}
     nav{width:100%}
     nav button{flex:1;text-align:center;padding:10px 6px 11px;font-size:13px}
@@ -334,7 +339,7 @@
   <section class="view active" id="view-log">
     <div class="panel">
       <div class="panel-title">Log a sale</div>
-      <div class="grid-3">
+      <div class="grid-4">
         <label class="field">Date
           <input type="date" id="saleDate">
         </label>
@@ -343,6 +348,14 @@
         </label>
         <label class="field">Seat number
           <input type="text" id="saleSeat" placeholder="e.g. 24A">
+        </label>
+        <label class="field">Payment
+          <select id="salePayment">
+            <option value="">-- Choose --</option>
+            <option value="Visa">Visa</option>
+            <option value="Mastercard">Mastercard</option>
+            <option value="Octopus">Octopus Card</option>
+          </select>
         </label>
       </div>
       <datalist id="flightList"></datalist>
@@ -825,6 +838,7 @@ function saveSale(){
   const date = document.getElementById("saleDate").value || today();
   const flight = document.getElementById("saleFlight").value.trim().toUpperCase();
   const seat = document.getElementById("saleSeat").value.trim();
+  const payment = document.getElementById("salePayment").value;
   const items = currentItems();
 
   if(!flight){ toast("Enter a flight number."); return; }
@@ -836,6 +850,7 @@ function saveSale(){
     id: editingId || uid(),
     date, flight, seat,
     items,
+    payment: payment || "",
     subtotal:t.subtotal, combo:t.combo, dfDisc:t.dfDisc, total:t.total,
     createdAt: editingId ? (state.sales.find(s=>s.id===editingId)||{}).createdAt : Date.now()
   };
@@ -859,6 +874,7 @@ function clearForm(){
   document.getElementById("saleDate").value = today();
   document.getElementById("saleFlight").value = "";
   document.getElementById("saleSeat").value = "";
+  document.getElementById("salePayment").value = "";
   document.getElementById("itemRows").innerHTML = "";
   addItemRow();
   renderCalc();
@@ -906,6 +922,7 @@ function renderSales(){
         '<div class="stub-top">'+
           '<div class="stub-flt"><span class="tag">Flight</span>'+esc(s.flight)+'</div>'+
           '<div class="stub-seat"><span class="tag">Seat '+esc(s.seat)+'</span>'+fmtDate(s.date)+'</div>'+
+          (s.payment ? '<div class="stub-pay"><span class="tag">Pay</span>'+esc(s.payment)+'</div>' : '')+
         '</div>'+
         '<div class="stub-body">'+
           '<table class="stub-items"><thead><tr><th>Item</th><th style="text-align:right">Qty</th><th style="text-align:right">Price</th><th style="text-align:right">Total</th></tr></thead><tbody>'+itemsHtml+'</tbody></table>'+
@@ -946,6 +963,7 @@ function editSale(id){
   document.getElementById("saleDate").value = s.date;
   document.getElementById("saleFlight").value = s.flight;
   document.getElementById("saleSeat").value = s.seat;
+  document.getElementById("salePayment").value = s.payment || "";
   const rows = document.getElementById("itemRows");
   rows.innerHTML = "";
   for(const it of s.items){
@@ -992,6 +1010,7 @@ function openPdf(s){
         '<span><b>Seat</b> &nbsp;'+esc(s.seat)+'</span>' +
         '<span><b>Date</b> &nbsp;'+fmtDate(s.date)+'</span>' +
         '<span><b>Items</b> &nbsp;'+s.items.reduce((a,i)=>a+i.qty,0)+'</span>' +
+        (s.payment ? '<span><b>Paid by</b> &nbsp;'+esc(s.payment)+'</span>' : '')+
       '</div>' +
       '<table><thead><tr><th>Item</th><th style="text-align:right">Qty</th><th style="text-align:right">Unit price</th><th style="text-align:right">Total</th></tr></thead>' +
       '<tbody>'+itemsHtml+discHtml+'</tbody></table>' +
@@ -1053,7 +1072,9 @@ function renderFlights(){
     const saleRows = salesList.map(s=>
       '<div class="stub" style="margin:10px 0 0">'+
         '<div class="stub-top"><div class="stub-flt" style="font-size:15px">'+esc(s.flight)+'</div>'+
-        '<div class="stub-seat" style="font-size:13px"><span class="tag">Seat '+esc(s.seat)+'</span>'+fmtDate(s.date)+'</div></div>'+
+        '<div class="stub-seat" style="font-size:13px"><span class="tag">Seat '+esc(s.seat)+'</span>'+fmtDate(s.date)+'</div>'+
+        (s.payment ? '<div class="stub-pay" style="font-size:12px"><span class="tag">Pay</span>'+esc(s.payment)+'</div>' : '')+
+        '</div>'+
         '<div class="stub-body">'+s.items.map(it=>esc(it.name)+' ×'+it.qty+' @ '+money(it.unitPrice)).join("<br>")+
           ((s.combo||s.dfDisc)?'<div class="stub-disc">Discounts: −'+money(s.combo+s.dfDisc)+'</div>':"")+
         '</div>'+
