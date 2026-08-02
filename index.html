@@ -1004,8 +1004,12 @@ function openPdf(s){
       '.total .lbl{font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:#5f7d80}' +
       '.total .amt{font-size:28px;font-weight:700;color:#0a5c63}' +
       '.foot{margin-top:28px;font-size:11px;color:#5f7d80;text-align:center}' +
-      '@media print{body{margin:0}.sheet{max-width:100%}}' +
-    '</style></head><body><div class="sheet">' +
+      '@media print{body{margin:0}.sheet{max-width:100%}.close-btn{display:none}}' +
+      '.close-btn{position:fixed;top:12px;left:12px;z-index:99;background:#0a5c63;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:15px;font-family:Arial,sans-serif;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)}' +
+      '.close-btn:active{opacity:.8}' +
+    '</style></head><body>' +
+    '<button class="close-btn" onclick="window.close()" title="Close">&larr; Back</button>' +
+    '<div class="sheet">' +
       '<div class="head"><div class="brand">GBA Calculator<small>flight sales &middot; HKD</small></div><div class="flt">'+esc(s.flight)+'</div></div>' +
       '<div class="meta">' +
         '<span><b>Seat</b> &nbsp;'+esc(s.seat)+'</span>' +
