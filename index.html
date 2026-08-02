@@ -1,0 +1,1077 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#A1E3E6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="duck-logo.png">
+<title>GBA Calculator — Flight Sales</title>
+<style>
+  :root{
+    --bg:#eef7f8;
+    --panel:#ffffff;
+    --panel-2:#e7f4f5;
+    --line:#b7dadd;
+    --ink:#173a3f;
+    --muted:#5f7d80;
+    --gold:#0f7f88;
+    --gold-soft:#0a5c63;
+    --sky:#3d7f8a;
+    --danger:#c0392b;
+    --good:#2e7d4f;
+    --accent:#A1E3E6;
+    --radius:14px;
+    --shadow:0 1px 3px rgba(23,58,63,.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:Arial,Helvetica,sans-serif;
+    font-size:15px;
+    line-height:1.5;
+    display:flex;flex-direction:column;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:Arial,Helvetica,sans-serif;font-weight:700;letter-spacing:.01em}
+  .mono,.flight,.seat,.num{font-family:"Cascadia Mono",Consolas,"SF Mono",Menlo,monospace}
+
+  /* ---------- header ---------- */
+  header{
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#b5e6e9,var(--bg));
+    padding:18px 22px 0;
+  }
+  .brand-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;max-width:1080px;margin:0 auto;padding-bottom:14px}
+  .brand-id{display:flex;align-items:center;gap:12px}
+  .brand-logo{width:44px;height:44px;border-radius:10px;object-fit:cover;border:2px solid #fff;box-shadow:var(--shadow)}
+  .logotype{font-family:Arial,Helvetica,sans-serif;font-size:26px;font-weight:700;letter-spacing:.06em;color:var(--gold-soft)}
+  .brand-sub{font-size:12px;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;margin-top:2px}
+  nav{display:flex;gap:2px;max-width:1080px;margin:0 auto;overflow-x:auto}
+  nav button{
+    appearance:none;background:transparent;border:none;cursor:pointer;
+    color:var(--muted);font-family:inherit;font-size:14px;
+    padding:10px 16px 12px;border-bottom:2px solid transparent;white-space:nowrap;
+  }
+  nav button:hover{color:var(--ink)}
+  nav button.active{color:var(--gold-soft);border-bottom-color:var(--accent)}
+
+  /* ---------- layout ---------- */
+  main{flex:1;width:100%;max-width:1080px;margin:0 auto;padding:26px 22px 60px}
+  section.view{display:none}
+  section.view.active{display:block}
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:20px;
+    box-shadow:var(--shadow);
+  }
+  .panel + .panel{margin-top:16px}
+  .panel-title{font-size:17px;margin-bottom:14px;color:var(--ink)}
+  .hint{color:var(--muted);font-size:13px}
+  .muted{color:var(--muted)}
+
+  /* ---------- forms ---------- */
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  label.field{display:flex;flex-direction:column;gap:6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  label.field input{
+    background:var(--panel-2);border:1px solid var(--line);border-radius:8px;
+    color:var(--ink);font-family:inherit;font-size:15px;padding:10px 12px;outline:none;
+  }
+  label.field input:focus{border-color:var(--accent)}
+  input[list]::-webkit-calendar-picker-indicator{opacity:.55}
+  input[type=number]::-webkit-inner-spin-button{opacity:1}
+  input[type=date]::-webkit-calendar-picker-indicator{opacity:.55}
+
+  .btn{
+    appearance:none;cursor:pointer;border:1px solid transparent;border-radius:9px;
+    font-family:inherit;font-size:14px;padding:10px 16px;transition:filter .15s, background .15s;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--accent);color:#0a3a40;font-weight:600}
+  .btn-primary:hover{filter:brightness(.96)}
+  .btn-ghost{background:#fff;border-color:var(--line);color:var(--ink);box-shadow:var(--shadow)}
+  .btn-ghost:hover{background:var(--panel-2)}
+  .btn-danger{background:#fff;border-color:var(--danger);color:var(--danger)}
+  .btn-danger:hover{background:var(--danger);color:#fff}
+  .btn-mini{padding:4px 10px;font-size:12px;border-radius:7px}
+  .btn-sm{padding:7px 12px;font-size:13px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .row-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+
+  /* ---------- item rows ---------- */
+  .item-row{
+    display:grid;grid-template-columns:minmax(180px,1.6fr) 84px 120px 110px 34px;
+    gap:10px;align-items:center;margin-bottom:10px;
+  }
+  .item-row select,.item-row input{
+    background:var(--panel-2);border:1px solid var(--line);border-radius:8px;
+    color:var(--ink);font-family:inherit;font-size:14px;padding:9px 10px;width:100%;outline:none;
+  }
+  .item-row select:focus,.item-row input:focus{border-color:var(--accent)}
+  .item-row .price-wrap{position:relative}
+  .item-row .price-wrap .cur{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none}
+  .item-row .price-wrap input{padding-left:34px}
+  .item-row .line-total{text-align:right;font-size:14px;color:var(--gold-soft)}
+  .row-del{
+    appearance:none;background:transparent;border:none;color:var(--muted);cursor:pointer;
+    font-size:20px;line-height:1;padding:6px;border-radius:6px;
+  }
+  .row-del:hover{color:var(--danger);background:rgba(192,57,43,.1)}
+  .custom-fields{grid-column:1 / span 3;display:grid;grid-template-columns:1.6fr 1fr;gap:10px;margin-top:-4px;margin-bottom:8px}
+  .custom-fields.hidden{display:none}
+  .row-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .row-head span{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+  /* ---------- totals / discount ---------- */
+  .calc{
+    margin-top:18px;border-top:1px dashed var(--line);padding-top:14px;
+    max-width:420px;margin-left:auto;
+  }
+  .calc .line{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:14px;color:var(--muted)}
+  .calc .line b{color:var(--ink);font-weight:500}
+  .calc .line.disc{color:var(--good)}
+  .calc .line.disc.zero{color:var(--muted)}
+  .calc .rule{font-size:12px;color:var(--sky);padding:2px 0}
+  .calc .grand{
+    display:flex;justify-content:space-between;align-items:center;
+    border-top:1px solid var(--line);margin-top:10px;padding-top:12px;
+  }
+  .calc .grand .amt{font-size:30px;color:var(--gold-soft);font-family:Arial,Helvetica,sans-serif;font-weight:700}
+  .calc .grand .lbl{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+
+  /* ---------- sales list / stubs ---------- */
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+  .toolbar select,.toolbar input{
+    background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--ink);
+    font-family:inherit;font-size:14px;padding:9px 12px;outline:none;
+  }
+  .toolbar select:focus,.toolbar input:focus{border-color:var(--accent)}
+  .toolbar .spacer{flex:1}
+
+  .stub{
+    position:relative;background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;margin-bottom:14px;overflow:hidden;
+    box-shadow:var(--shadow);
+  }
+  .stub-top{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:14px 18px;background:var(--panel-2);
+    border-bottom:1px dashed var(--line);
+  }
+  .stub-flt{font-size:19px;color:var(--gold-soft);letter-spacing:.04em}
+  .stub-flt .tag{font-size:11px;color:var(--muted);letter-spacing:.15em;display:block;text-transform:uppercase;margin-bottom:2px}
+  .stub-seat{text-align:right;font-size:15px;color:var(--sky)}
+  .stub-seat .tag{font-size:11px;color:var(--muted);letter-spacing:.15em;display:block;text-transform:uppercase;margin-bottom:2px}
+  .stub-body{padding:12px 18px}
+  .stub-items{width:100%;border-collapse:collapse;font-size:14px}
+  .stub-items th{text-align:left;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:4px 0 8px;font-weight:500}
+  .stub-items td{padding:5px 0;border-top:1px solid var(--line);vertical-align:top}
+  .stub-items td.r{text-align:right;white-space:nowrap}
+  .stub-disc{font-size:13px;color:var(--good);padding-top:6px}
+  .stub-total{display:flex;justify-content:space-between;align-items:baseline;padding:10px 18px 14px;border-top:1px solid var(--line)}
+  .stub-total .lbl{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+  .stub-total .amt{font-size:22px;color:var(--gold-soft);font-family:Arial,Helvetica,sans-serif;font-weight:700}
+  .stub-actions{position:absolute;top:10px;right:10px;display:flex;gap:6px;opacity:0;transition:opacity .15s}
+  .stub:hover .stub-actions{opacity:1}
+
+  /* ---------- flight summary ---------- */
+  .flight-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:16px;overflow:hidden;box-shadow:var(--shadow)}
+  .flight-head{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+    padding:16px 20px;background:linear-gradient(90deg,var(--panel-2),var(--panel));cursor:pointer;
+  }
+  .flight-head:hover{background:var(--panel-2)}
+  .flight-code{font-size:20px;color:var(--gold-soft)}
+  .flight-stats{display:flex;gap:28px;flex-wrap:wrap}
+  .stat .v{font-size:20px;font-family:Arial,Helvetica,sans-serif;font-weight:700}
+  .stat .k{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .flight-body{display:none;padding:0 20px 20px}
+  .flight-card.open .flight-body{display:block}
+  .flight-card.open .flight-head{border-bottom:1px solid var(--line)}
+  .chevron{color:var(--muted);font-size:14px;transition:transform .2s}
+  .flight-card.open .chevron{transform:rotate(90deg)}
+  .breakdown{margin-top:14px}
+  .breakdown h4{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-family:inherit;font-weight:500}
+  .breakdown table{width:100%;border-collapse:collapse;font-size:14px}
+  .breakdown th{text-align:left;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:5px 0;font-weight:500}
+  .breakdown td{padding:6px 0;border-top:1px solid var(--line)}
+  .breakdown td.r{text-align:right}
+
+  /* ---------- catalog ---------- */
+  .cat-row{display:grid;grid-template-columns:1.6fr 150px 130px 60px;gap:10px;align-items:center;margin-bottom:8px}
+  .cat-row input,.cat-row select{
+    background:var(--panel-2);border:1px solid var(--line);border-radius:8px;color:var(--ink);
+    font-family:inherit;font-size:14px;padding:9px 10px;width:100%;outline:none;
+  }
+  .cat-row input:focus,.cat-row select:focus{border-color:var(--accent)}
+  .cat-row .price-wrap{position:relative}
+  .cat-row .price-wrap .cur{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none}
+  .cat-row .price-wrap input{padding-left:34px}
+
+  /* ---------- footer / data ---------- */
+  footer{border-top:1px solid var(--line);padding:14px 22px;background:var(--panel)}
+  .footer-inner{max-width:1080px;margin:0 auto;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .footer-inner .grow{flex:1}
+  .footer-note{font-size:12px;color:var(--muted)}
+
+  /* ---------- toast ---------- */
+  #toast{
+    position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
+    background:var(--panel);border:1px solid var(--gold-soft);color:var(--ink);
+    padding:12px 20px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;
+    transition:opacity .25s,transform .25s;z-index:50;box-shadow:0 8px 24px rgba(31,41,55,.25);
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .modal-overlay{position:fixed;inset:0;background:rgba(31,41,55,.35);z-index:40;display:flex;align-items:center;justify-content:center;padding:20px}
+
+  .empty{padding:36px 20px;text-align:center;color:var(--muted)}
+  .empty .big{font-size:34px;margin-bottom:8px;font-family:Arial,Helvetica,sans-serif;font-weight:700;color:var(--gold-soft)}
+
+  .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);color:var(--muted);background:var(--panel-2)}
+  .badge.drink{color:#1d5a7a;border-color:rgba(51,105,143,.45);background:rgba(51,105,143,.08)}
+  .badge.meal{color:var(--gold-soft);border-color:rgba(176,122,30,.45);background:rgba(176,122,30,.08)}
+  .badge.duty-free{color:#1d6b44;border-color:rgba(46,125,79,.45);background:rgba(46,125,79,.08)}
+  .badge.other{color:var(--muted)}
+  .badge.seats{color:#0f7f88;border-color:rgba(15,127,136,.45);background:rgba(15,127,136,.08)}
+  .badge.snacks{color:#9a6a00;border-color:rgba(154,106,0,.45);background:rgba(154,106,0,.08)}
+  .badge.gba{color:#173a3f;border-color:rgba(161,227,230,.8);background:rgba(161,227,230,.35)}
+  .badge.special{color:#a0561a;border-color:rgba(176,94,26,.45);background:rgba(176,94,26,.1)}
+  .badge.emperor{color:#7a2456;border-color:rgba(122,36,86,.45);background:rgba(122,36,86,.08)}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:1024px){
+    header{padding:14px 16px 0}
+    .brand-row,.nav,.footer-inner{padding-left:4px;padding-right:4px}
+    main{padding:20px 16px 48px}
+    .panel{padding:16px}
+    .flight-stats{gap:18px}
+    .item-row{grid-template-columns:minmax(140px,1.4fr) 74px 110px 100px 32px;gap:8px}
+  }
+
+  @media (max-width:768px){
+    .grid-3{grid-template-columns:1fr 1fr}
+    .grid-2{grid-template-columns:1fr}
+    .logotype{font-size:22px}
+    .brand-logo{width:38px;height:38px}
+    nav button{padding:9px 12px 11px;font-size:13px}
+    .cols-head{display:none}
+    .item-row{grid-template-columns:1fr 74px 1fr 32px}
+    .item-row .line-total{display:none}
+    .custom-fields{grid-template-columns:1fr}
+    .cat-row{grid-template-columns:1fr 110px 1fr}
+    .cat-row .row-del{justify-self:end}
+    .stub-actions{opacity:1}
+    .calc{margin-left:0;max-width:100%}
+    .calc .grand .amt{font-size:26px}
+    .toolbar{gap:8px}
+    .toolbar label.field{flex:1;min-width:140px}
+    .toolbar .spacer{display:none}
+    .flight-head{flex-wrap:wrap;padding:14px 16px}
+    .flight-stats{width:100%;gap:20px;order:3}
+    .stat .v{font-size:18px}
+    .chevron{display:none}
+    .stub-top{padding:12px 14px}
+    .stub-body{padding:10px 14px}
+    .stub-total{padding:10px 14px 12px}
+    .breakdown table,.stub-items{font-size:13px}
+    .row-head{flex-wrap:wrap;gap:8px}
+  }
+
+  @media (max-width:520px){
+    .grid-3{grid-template-columns:1fr}
+    .brand-row{flex-direction:column;align-items:flex-start;gap:4px}
+    nav{width:100%}
+    nav button{flex:1;text-align:center;padding:10px 6px 11px;font-size:13px}
+    .item-row{grid-template-columns:1fr 1fr 34px}
+    .item-row .r-item{grid-column:1 / span 3}
+    .item-row .r-name{grid-column:1 / span 3}
+    .custom-fields{grid-column:1 / span 3}
+    .item-row .r-qty{min-width:0}
+    .stub-actions{top:8px;right:8px}
+    .stub-actions .btn{padding:3px 7px;font-size:11px}
+    .flight-stats{gap:14px}
+    .stat .v{font-size:16px}
+    .row-actions .btn{flex:1}
+    .footer-inner{justify-content:center;text-align:center}
+    .footer-note{font-size:11px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-row">
+    <div class="brand-id">
+      <img class="brand-logo" src="duck-logo.png" alt="GBA">
+      <div>
+        <div class="logotype">GBA Calculator</div>
+        <div class="brand-sub">flight sales &middot; HKD</div>
+      </div>
+    </div>
+  </div>
+  <nav id="nav">
+    <button data-view="log" class="active">Log Sale</button>
+    <button data-view="sales">Sales</button>
+    <button data-view="flights">Flights</button>
+    <button data-view="catalog">Catalog</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ================= LOG SALE ================= -->
+  <section class="view active" id="view-log">
+    <div class="panel">
+      <div class="panel-title">Log a sale</div>
+      <div class="grid-3">
+        <label class="field">Date
+          <input type="date" id="saleDate">
+        </label>
+        <label class="field">Flight number
+          <input type="text" id="saleFlight" list="flightList" placeholder="e.g. HB908">
+        </label>
+        <label class="field">Seat number
+          <input type="text" id="saleSeat" placeholder="e.g. 24A">
+        </label>
+      </div>
+      <datalist id="flightList"></datalist>
+    </div>
+
+    <div class="panel">
+      <div class="row-head">
+        <span>Items sold</span>
+        <button class="btn btn-ghost btn-mini" id="addRow">+ Add item</button>
+      </div>
+      <div class="row-head cols-head" style="margin-top:-6px">
+        <span style="flex:1.6">Item</span>
+        <span style="width:84px">Qty</span>
+        <span style="width:120px">Unit price</span>
+        <span style="width:110px;text-align:right">Total</span>
+        <span style="width:34px"></span>
+      </div>
+      <div id="itemRows"></div>
+
+      <div class="calc">
+        <div class="line"><span>Subtotal</span><b id="cSub">HK$0.00</b></div>
+        <div id="discLines"></div>
+        <div class="grand">
+          <span class="lbl">Total due</span>
+          <span class="amt" id="cGrand">HK$0.00</span>
+        </div>
+        <div class="row-actions" style="justify-content:flex-end">
+          <button class="btn btn-ghost" id="btnClear">Clear</button>
+          <button class="btn btn-primary" id="btnSave">Record sale</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SALES ================= -->
+  <section class="view" id="view-sales">
+    <div class="toolbar">
+      <label class="field" style="flex-direction:row;align-items:center;gap:8px">Flight
+        <select id="salesFlightFilter"><option value="">All flights</option></select>
+      </label>
+      <div class="spacer"></div>
+      <div id="salesCount" class="hint"></div>
+    </div>
+    <div id="salesList"></div>
+  </section>
+
+  <!-- ================= FLIGHTS ================= -->
+  <section class="view" id="view-flights">
+    <div class="toolbar">
+      <label class="field" style="flex-direction:row;align-items:center;gap:8px">From
+        <input type="date" id="fltFrom">
+      </label>
+      <label class="field" style="flex-direction:row;align-items:center;gap:8px">To
+        <input type="date" id="fltTo">
+      </label>
+      <button class="btn btn-ghost btn-sm" id="btnClearDates">Clear</button>
+      <div class="spacer"></div>
+      <div id="fltCount" class="hint"></div>
+    </div>
+    <div id="flightsList"></div>
+  </section>
+
+  <!-- ================= CATALOG ================= -->
+  <section class="view" id="view-catalog">
+    <div class="panel">
+      <div class="row-head">
+        <span>Item catalog</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-mini" id="btnExportCatalog">Export</button>
+          <label class="btn btn-ghost btn-mini" style="cursor:pointer;margin:0">Import<input type="file" accept=".csv,text/csv" id="importCatalogInput" style="display:none"></label>
+          <button class="btn btn-ghost btn-mini" id="addCat">+ Add item</button>
+        </div>
+      </div>
+      <div class="row-head" style="margin-top:-6px">
+        <span style="flex:1.6">Name</span>
+        <span style="width:150px">Category</span>
+        <span style="width:130px">Default price</span>
+        <span style="width:60px"></span>
+      </div>
+      <div id="catRows"></div>
+      <p class="hint" style="margin-top:12px">
+        Prices here are defaults only — you can change the unit price freely on each sale.
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span class="footer-note">Saved locally on this device.</span>
+    <div class="grow"></div>
+    <span class="footer-note" id="footStat"></span>
+  </div>
+</footer>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+/* ---------------- data ---------------- */
+const KEY = "cabinlog.v1";
+const CATS = ["drink","meal","snacks","duty-free","seats","gba","special","emperor","other"];
+
+const CAT_LABEL = {
+  drink:"Drink",meal:"Meal",snacks:"Snacks","duty-free":"Duty-free",other:"Other",
+  seats:"Seats",gba:"GBA Products",special:"Special Offer",emperor:"Emperor Jewellery Products"
+};
+const DEFAULT_CATALOG = [
+  {id:"i1", name:"Still water 500ml", category:"drink",   price:30},
+  {id:"i2", name:"Juice 300ml",       category:"drink",   price:48},
+  {id:"i3", name:"Soda 330ml",        category:"drink",   price:40},
+  {id:"i4", name:"Coffee",            category:"drink",   price:58},
+  {id:"i5", name:"Beer 330ml",        category:"drink",   price:70},
+  {id:"i6", name:"Sandwich",          category:"meal",    price:88},
+  {id:"i7", name:"Pasta bowl",        category:"meal",    price:118},
+  {id:"i8", name:"Snack box",         category:"meal",    price:65},
+  {id:"i9", name:"Noodles",           category:"meal",    price:96},
+  {id:"i10",name:"Whiskey 700ml",     category:"duty-free",price:680},
+  {id:"i11",name:"Cognac 700ml",      category:"duty-free",price:750},
+  {id:"i12",name:"Perfume 100ml",     category:"duty-free",price:980},
+  {id:"i13",name:"Sunscreen SPF50",   category:"duty-free",price:420},
+  {id:"i14",name:"Chocolates 250g",   category:"other",   price:85},
+  {id:"i15",name:"Milk formula",      category:"other",   price:260}
+];
+
+let state = load() || { catalog:[], sales:[] };
+if (!state.catalog || !state.catalog.length) { state.catalog = DEFAULT_CATALOG.slice(); save(); }
+
+let editingId = null;
+
+/* ---------------- persistence ---------------- */
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(!raw) return null;
+    const d = JSON.parse(raw);
+    if(!d || !Array.isArray(d.catalog)) return null;
+    return d;
+  }catch(e){ return null; }
+}
+function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+
+/* ---------------- helpers ---------------- */
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const money = n => "HK$" + (Math.round((n+Number.EPSILON)*100)/100).toLocaleString("en-HK",{minimumFractionDigits:2, maximumFractionDigits:2});
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const today = () => new Date().toISOString().slice(0,10);
+const pad = n => String(n).padStart(2,"0");
+function fmtDate(iso){
+  if(!iso) return "—";
+  const d = new Date(iso + "T00:00:00");
+  if(isNaN(d)) return iso;
+  return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate());
+}
+
+let toastTimer;
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+/* ---------------- totals ---------------- */
+function computeTotals(items){
+  let subtotal=0, dfSub=0, drinkQty=0, mealQty=0, snacksQty=0;
+  for(const it of items){
+    const line = (Number(it.qty)||0) * (Number(it.unitPrice)||0);
+    subtotal += line;
+    if(it.category==="drink") drinkQty += Number(it.qty)||0;
+    if(it.category==="meal") mealQty += Number(it.qty)||0;
+    if(it.category==="snacks") snacksQty += Number(it.qty)||0;
+    if(it.category==="duty-free") dfSub += line;
+  }
+  const pairs = Math.min(drinkQty, mealQty + snacksQty);
+  const combo = pairs * 10;
+  const dfDisc = dfSub >= 1500 ? Math.round((dfSub*0.2 + Number.EPSILON)*100)/100 : 0;
+  const total = Math.max(0, Math.round((subtotal - combo - dfDisc + Number.EPSILON)*100)/100);
+  return { subtotal, combo, dfDisc, dfSub, drinkQty, mealQty, snacksQty, pairs, total };
+}
+
+/* ---------------- catalog ---------------- */
+function itemById(id){ return state.catalog.find(i=>i.id===id); }
+
+function renderCatalog(){
+  const wrap = document.getElementById("catRows");
+  wrap.innerHTML = "";
+  if(!state.catalog.length){
+    wrap.innerHTML = '<div class="empty">No catalog items yet. Add one below.</div>';
+    return;
+  }
+  for(const it of state.catalog){
+    const row = document.createElement("div");
+    row.className = "cat-row";
+    row.innerHTML =
+      '<input type="text" class="c-name" value="'+esc(it.name)+'">'+
+      '<select class="c-cat">'+CATS.map(c=>'<option value="'+c+'"'+(it.category===c?' selected':'')+'>'+esc(CAT_LABEL[c])+'</option>').join("")+'</select>'+
+      '<div class="price-wrap"><span class="cur">HK$</span><input type="number" class="c-price" min="0" step="0.1" value="'+it.price+'"></div>'+
+      '<button class="row-del c-del" title="Delete">×</button>';
+    row.querySelector(".c-del").onclick = ()=>{
+      if(!confirm('Delete "'+it.name+'" from the catalog?')) return;
+      state.catalog = state.catalog.filter(x=>x.id!==it.id);
+      save(); renderAll();
+    };
+    const commit = ()=>{
+      const name = row.querySelector(".c-name").value.trim();
+      const price = parseFloat(row.querySelector(".c-price").value);
+      it.name = name || it.name;
+      it.category = row.querySelector(".c-cat").value;
+      if(!isNaN(price) && price>=0) it.price = price;
+      save(); renderAll();
+    };
+    row.querySelector(".c-name").onchange = commit;
+    row.querySelector(".c-cat").onchange = commit;
+    row.querySelector(".c-price").onchange = commit;
+    wrap.appendChild(row);
+  }
+}
+
+function exportCatalog(){
+  const q = v => '"'+String(v).replace(/"/g,'""')+'"';
+  const rows = [["Name","Category","Price"]].concat(
+    state.catalog.map(it=>[it.name, it.category, it.price])
+  );
+  const csv = rows.map(r=>r.map(q).join(",")).join("\r\n");
+  const blob = new Blob(["\uFEFF"+csv], {type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "gba-catalog-" + today() + ".csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast("Catalog exported.");
+}
+function parseCsvLine(line){
+  const out = []; let cur = "", inQ = false;
+  for(let i=0;i<line.length;i++){
+    const c = line[i];
+    if(inQ){
+      if(c==='"' && line[i+1]==='"'){ cur+='"'; i++; }
+      else if(c==='"') inQ = false;
+      else cur += c;
+    }else{
+      if(c==='"') inQ = true;
+      else if(c===','){ out.push(cur); cur=""; }
+      else if(c==='\r'){}
+      else cur += c;
+    }
+  }
+  out.push(cur);
+  return out.map(s=>s.trim());
+}
+function importCatalog(file){
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const text = reader.result.replace(/^\uFEFF/,"");
+      const lines = text.split(/\r?\n/).filter(l=>l.trim().length>0);
+      if(lines.length<2) throw new Error("bad");
+      let start = 0;
+      if(lines[0].toLowerCase().includes("name") && lines[0].toLowerCase().includes("category")) start = 1;
+      const list = [];
+      for(let i=start;i<lines.length;i++){
+        const parts = parseCsvLine(lines[i]);
+        const name = (parts[0]||"").trim();
+        const cat = (parts[1]||"other").trim().toLowerCase();
+        const price = parseFloat(parts[2]);
+        if(!name) continue;
+        list.push({ id:uid(), name, category: CATS.includes(cat) ? cat : "other", price: isNaN(price)||price<0 ? 0 : price });
+      }
+      if(!list.length) throw new Error("bad");
+      if(!confirm("Import will REPLACE the current catalog with "+list.length+" items. Continue?")) return;
+      state.catalog = list;
+      save(); renderAll();
+      toast("Catalog imported.");
+    }catch(e){ toast("Invalid catalog CSV file."); }
+  };
+  reader.readAsText(file);
+}
+
+/* ---------------- log sale form ---------------- */
+function catalogOptions(selectedId){
+  let html = '<option value="">— choose item —</option>';
+  for(const c of CATS){
+    const group = state.catalog.filter(i=>i.category===c);
+    if(!group.length) continue;
+    html += '<optgroup label="'+esc(CAT_LABEL[c])+'">';
+    for(const it of group){
+      html += '<option value="'+it.id+'"'+(it.id===selectedId?' selected':'')+'>'+esc(it.name)+' &middot; '+money(it.price)+'</option>';
+    }
+    html += '</optgroup>';
+  }
+  html += '<option value="__custom">+ Custom item…</option>';
+  return html;
+}
+
+function addItemRow(item){
+  const rows = document.getElementById("itemRows");
+  const row = document.createElement("div");
+  row.className = "item-row";
+  row.innerHTML =
+    '<select class="r-item">'+catalogOptions(item?item.catId:"")+'</select>'+
+    '<input type="number" class="r-qty" min="1" value="'+(item?item.qty:1)+'">'+
+    '<div class="price-wrap"><span class="cur">HK$</span><input type="number" class="r-price" min="0" step="0.1" value="'+(item?item.unitPrice:"")+'"></div>'+
+    '<span class="line-total">HK$0.00</span>'+
+    '<button class="row-del" title="Remove">×</button>'+
+    '<div class="custom-fields hidden">'+
+      '<input type="text" class="r-name" placeholder="Item name" value="'+(item&&item.customName?esc(item.customName):"")+'">'+
+      '<select class="r-cat">'+CATS.map(c=>'<option value="'+c+'">'+esc(CAT_LABEL[c])+'</option>').join("")+'</select>'+
+    '</div>';
+  const wrap = row.querySelector(".price-wrap");
+  const priceWrapSel = row.querySelector(".r-item");
+  const cf = row.querySelector(".custom-fields");
+
+  function readRow(){
+    const sel = row.querySelector(".r-item").value;
+    const qty = parseInt(row.querySelector(".r-qty").value,10)||0;
+    const price = parseFloat(row.querySelector(".r-price").value);
+    if(sel && sel!=="__custom"){
+      const it = itemById(sel);
+      return { name:it.name, category:it.category, qty, unitPrice:isNaN(price)?it.price:price, custom:false };
+    }
+    if(sel==="__custom"){
+      return {
+        name: row.querySelector(".r-name").value.trim() || "Custom item",
+        category: row.querySelector(".r-cat").value,
+        qty, unitPrice:isNaN(price)?0:price, custom:true
+      };
+    }
+    return null;
+  }
+
+  function refresh(){
+    const it = readRow();
+    const line = it ? (it.qty * it.unitPrice) : 0;
+    row.querySelector(".line-total").textContent = money(line);
+    renderCalc();
+  }
+
+  priceWrapSel.onchange = ()=>{
+    const v = priceWrapSel.value;
+    const showCustom = v==="__custom";
+    cf.classList.toggle("hidden", !showCustom);
+    if(!showCustom && v){
+      const it = itemById(v);
+      row.querySelector(".r-price").value = it.price;
+    }
+    refresh();
+  };
+  row.querySelector(".r-qty").oninput = refresh;
+  row.querySelector(".r-price").oninput = refresh;
+  row.querySelector(".r-name").oninput = refresh;
+  row.querySelector(".r-cat").onchange = refresh;
+  row.querySelector(".row-del").onclick = ()=>{ row.remove(); renderCalc(); };
+
+  if(item && item.catId==="__custom"){
+    priceWrapSel.value = "__custom";
+    cf.classList.remove("hidden");
+  }
+  rows.appendChild(row);
+  refresh();
+}
+
+function currentItems(){
+  const out = [];
+  document.querySelectorAll("#itemRows .item-row").forEach(row=>{
+    const sel = row.querySelector(".r-item").value;
+    const qty = parseInt(row.querySelector(".r-qty").value,10)||0;
+    const price = parseFloat(row.querySelector(".r-price").value);
+    if(!sel || qty<=0 || isNaN(price) || price<0) return;
+    if(sel==="__custom"){
+      out.push({ catId:"__custom", name: row.querySelector(".r-name").value.trim()||"Custom item", category: row.querySelector(".r-cat").value, qty, unitPrice:price, custom:true });
+    }else{
+      const it = itemById(sel);
+      if(!it) return;
+      out.push({ catId:it.id, name:it.name, category:it.category, qty, unitPrice:price, custom:false });
+    }
+  });
+  return out;
+}
+
+function renderCalc(){
+  const items = currentItems();
+  const t = computeTotals(items);
+  document.getElementById("cSub").textContent = money(t.subtotal);
+  document.getElementById("cGrand").textContent = money(t.total);
+
+  const box = document.getElementById("discLines");
+  box.innerHTML = "";
+  if(t.pairs>0){
+    box.innerHTML += '<div class="line disc'+(t.combo?'':' zero')+'"><span>Combo '+t.pairs+'× (meal or snacks + drink, −HK$10 each)</span><b>−'+money(t.combo)+'</b></div>';
+  }else if(t.drinkQty>0 && (t.mealQty>0 || t.snacksQty>0)){
+    box.innerHTML += '<div class="line disc zero"><span>Combo (meal/snacks + drink, HK$10 per pair)</span><b>−'+money(t.combo)+'</b></div>';
+  }else{
+    box.innerHTML += '<div class="rule">Tip: each meal + drink or snacks + drink pair gets HK$10 off.</div>';
+  }
+  if(t.dfSub>0){
+    box.innerHTML += '<div class="line disc'+(t.dfDisc?'':' zero')+'"><span>Duty-free subtotal</span><b>'+money(t.dfSub)+'</b></div>';
+    if(t.dfDisc>0){
+      box.innerHTML += '<div class="line disc"><span>20% off duty-free (HK$1,500+)</span><b>−'+money(t.dfDisc)+'</b></div>';
+    }else{
+      box.innerHTML += '<div class="rule">Duty-free reaches 20% off at HK$1,500. '+(1500-t.dfSub>0? money(1500-t.dfSub)+' to go.':'')+'</div>';
+    }
+  }else{
+    box.innerHTML += '<div class="rule">Duty-free purchases of HK$1,500+ get 20% off.</div>';
+  }
+}
+
+function saveSale(){
+  const date = document.getElementById("saleDate").value || today();
+  const flight = document.getElementById("saleFlight").value.trim().toUpperCase();
+  const seat = document.getElementById("saleSeat").value.trim();
+  const items = currentItems();
+
+  if(!flight){ toast("Enter a flight number."); return; }
+  if(!seat){ toast("Enter a seat number."); return; }
+  if(!items.length){ toast("Add at least one item."); return; }
+
+  const t = computeTotals(items);
+  const sale = {
+    id: editingId || uid(),
+    date, flight, seat,
+    items,
+    subtotal:t.subtotal, combo:t.combo, dfDisc:t.dfDisc, total:t.total,
+    createdAt: editingId ? (state.sales.find(s=>s.id===editingId)||{}).createdAt : Date.now()
+  };
+
+  if(editingId){
+    const idx = state.sales.findIndex(s=>s.id===editingId);
+    if(idx>=0) state.sales[idx] = sale; else state.sales.push(sale);
+    toast("Sale updated.");
+  }else{
+    state.sales.push(sale);
+    toast("Sale recorded.");
+  }
+  editingId = null;
+  save();
+  clearForm();
+  renderAll();
+}
+
+function clearForm(){
+  editingId = null;
+  document.getElementById("saleDate").value = today();
+  document.getElementById("saleFlight").value = "";
+  document.getElementById("saleSeat").value = "";
+  document.getElementById("itemRows").innerHTML = "";
+  addItemRow();
+  renderCalc();
+}
+
+/* ---------------- sales list ---------------- */
+function renderSales(){
+  const filter = document.getElementById("salesFlightFilter").value;
+  const list = document.getElementById("salesList");
+  let sales = state.sales.slice().sort((a,b)=>(b.date.localeCompare(a.date)) || (b.createdAt-a.createdAt));
+  if(filter) sales = sales.filter(s=>s.flight===filter);
+
+  // list flights, each with its latest sale date, newest first
+  const flightInfo = {};
+  for(const s of state.sales){
+    if(!flightInfo[s.flight] || s.date > flightInfo[s.flight]) flightInfo[s.flight] = s.date;
+  }
+  const flights = Object.keys(flightInfo).sort((a,b)=>flightInfo[b].localeCompare(flightInfo[a]) || a.localeCompare(b));
+  const fltSel = document.getElementById("salesFlightFilter");
+  const cur = fltSel.value;
+  fltSel.innerHTML = '<option value="">All flights</option>' + flights.map(f=>'<option value="'+esc(f)+'"'+(f===cur?' selected':'')+'>'+esc(f)+' &middot; '+fmtDate(flightInfo[f])+'</option>').join("");
+
+  document.getElementById("salesCount").textContent = sales.length + (sales.length===1?" sale":" sales");
+
+  if(!sales.length){
+    list.innerHTML = '<div class="empty"><div class="big">No sales yet</div>Record your first sale in the Log Sale tab.</div>';
+    return;
+  }
+
+  list.innerHTML = sales.map(s=>{
+    const itemsHtml = s.items.map(it=>
+      '<tr><td><span class="badge '+it.category+'">'+esc(CAT_LABEL[it.category]||it.category)+'</span> &nbsp;'+esc(it.name)+'</td>'+
+      '<td class="r">×'+it.qty+'</td><td class="r">'+money(it.unitPrice)+'</td><td class="r">'+money(it.qty*it.unitPrice)+'</td></tr>'
+    ).join("");
+    let discHtml = "";
+    if(s.combo) discHtml += '<div class="stub-disc">Combo ×'+(s.combo/10)+' (meal/snacks + drink): −'+money(s.combo)+'</div>';
+    if(s.dfDisc) discHtml += '<div class="stub-disc">Duty-free 20% off: −'+money(s.dfDisc)+'</div>';
+    return (
+      '<div class="stub" data-id="'+s.id+'">'+
+        '<div class="stub-actions">'+
+          '<button class="btn btn-ghost btn-mini s-pdf">PDF</button>'+
+          '<button class="btn btn-ghost btn-mini s-edit">Edit</button>'+
+          '<button class="btn btn-danger btn-mini s-del">Del</button>'+
+        '</div>'+
+        '<div class="stub-top">'+
+          '<div class="stub-flt"><span class="tag">Flight</span>'+esc(s.flight)+'</div>'+
+          '<div class="stub-seat"><span class="tag">Seat '+esc(s.seat)+'</span>'+fmtDate(s.date)+'</div>'+
+        '</div>'+
+        '<div class="stub-body">'+
+          '<table class="stub-items"><thead><tr><th>Item</th><th style="text-align:right">Qty</th><th style="text-align:right">Price</th><th style="text-align:right">Total</th></tr></thead><tbody>'+itemsHtml+'</tbody></table>'+
+          discHtml+
+        '</div>'+
+        '<div class="stub-total"><span class="lbl">Total due</span><span class="amt">'+money(s.total)+'</span></div>'+
+      '</div>'
+    );
+  }).join("");
+
+  list.querySelectorAll(".s-edit").forEach(b=>{
+    b.onclick = ()=>{
+      const id = b.closest(".stub").dataset.id;
+      editSale(id);
+    };
+  });
+  list.querySelectorAll(".s-pdf").forEach(b=>{
+    b.onclick = ()=>{
+      const id = b.closest(".stub").dataset.id;
+      const s = state.sales.find(x=>x.id===id);
+      if(s) openPdf(s);
+    };
+  });
+  list.querySelectorAll(".s-del").forEach(b=>{
+    b.onclick = ()=>{
+      const id = b.closest(".stub").dataset.id;
+      if(!confirm("Delete this sale?")) return;
+      state.sales = state.sales.filter(s=>s.id!==id);
+      save(); renderAll(); toast("Sale deleted.");
+    };
+  });
+}
+
+function editSale(id){
+  const s = state.sales.find(x=>x.id===id);
+  if(!s) return;
+  editingId = id;
+  document.getElementById("saleDate").value = s.date;
+  document.getElementById("saleFlight").value = s.flight;
+  document.getElementById("saleSeat").value = s.seat;
+  const rows = document.getElementById("itemRows");
+  rows.innerHTML = "";
+  for(const it of s.items){
+    addItemRow(it);
+  }
+  if(!s.items.length) addItemRow();
+  switchView("log");
+  document.getElementById("btnSave").textContent = "Update sale";
+  window.scrollTo({top:0,behavior:"smooth"});
+  toast("Editing sale " + s.flight + " " + s.seat);
+}
+
+function openPdf(s){
+  const itemsHtml = s.items.map(it=>
+    '<tr><td>'+esc(it.name)+'</td><td style="text-align:right">'+it.qty+'</td><td style="text-align:right">'+money(it.unitPrice)+'</td><td style="text-align:right">'+money(it.qty*it.unitPrice)+'</td></tr>'
+  ).join("");
+  let discHtml = "";
+  if(s.combo) discHtml += '<tr><td style="text-align:right" colspan="3">Combo ×'+(s.combo/10)+' (meal/snacks + drink)</td><td style="text-align:right">−'+money(s.combo)+'</td></tr>';
+  if(s.dfDisc) discHtml += '<tr><td style="text-align:right" colspan="3">Duty-free 20% off</td><td style="text-align:right">−'+money(s.dfDisc)+'</td></tr>';
+
+  const html =
+    '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Sale ' + esc(s.flight) + ' ' + esc(s.seat) + '</title>' +
+    '<style>' +
+      '@page{margin:12mm}' +
+      'body{font-family:Arial,Helvetica,sans-serif;color:#173a3f;margin:0;padding:0}' +
+      '.sheet{max-width:640px;margin:0 auto}' +
+      '.head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #A1E3E6;padding-bottom:10px}' +
+      '.brand{font-size:20px;font-weight:700;color:#0a5c63}' +
+      '.brand small{display:block;font-size:11px;font-weight:400;color:#5f7d80;letter-spacing:.12em;text-transform:uppercase}' +
+      '.flt{font-size:28px;font-weight:700;color:#173a3f}' +
+      '.meta{display:flex;gap:24px;margin:14px 0;font-size:14px}' +
+      '.meta b{color:#0a5c63}' +
+      'table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}' +
+      'th{text-align:left;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#5f7d80;border-bottom:1px solid #b7dadd;padding:6px 0;font-weight:400}' +
+      'td{border-bottom:1px solid #e3eef0;padding:8px 0}' +
+      '.total{display:flex;justify-content:space-between;align-items:center;border-top:2px solid #A1E3E6;margin-top:14px;padding-top:12px}' +
+      '.total .lbl{font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:#5f7d80}' +
+      '.total .amt{font-size:28px;font-weight:700;color:#0a5c63}' +
+      '.foot{margin-top:28px;font-size:11px;color:#5f7d80;text-align:center}' +
+      '@media print{body{margin:0}.sheet{max-width:100%}}' +
+    '</style></head><body><div class="sheet">' +
+      '<div class="head"><div class="brand">GBA Calculator<small>flight sales &middot; HKD</small></div><div class="flt">'+esc(s.flight)+'</div></div>' +
+      '<div class="meta">' +
+        '<span><b>Seat</b> &nbsp;'+esc(s.seat)+'</span>' +
+        '<span><b>Date</b> &nbsp;'+fmtDate(s.date)+'</span>' +
+        '<span><b>Items</b> &nbsp;'+s.items.reduce((a,i)=>a+i.qty,0)+'</span>' +
+      '</div>' +
+      '<table><thead><tr><th>Item</th><th style="text-align:right">Qty</th><th style="text-align:right">Unit price</th><th style="text-align:right">Total</th></tr></thead>' +
+      '<tbody>'+itemsHtml+discHtml+'</tbody></table>' +
+      '<div class="total"><span class="lbl">Total due</span><span class="amt">'+money(s.total)+'</span></div>' +
+      '<div class="foot">GBA Calculator — flight sales record</div>' +
+    '</div><script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/script></body></html>';
+
+  const w = window.open("", "_blank", "width=760,height=920");
+  if(!w){ toast("Please allow pop-ups for this app."); return; }
+  w.document.write(html);
+  w.document.close();
+}
+
+/* ---------------- flight summary ---------------- */
+function renderFlights(){
+  const from = document.getElementById("fltFrom").value;
+  const to = document.getElementById("fltTo").value;
+  let sales = state.sales.slice();
+  if(from) sales = sales.filter(s=>s.date>=from);
+  if(to) sales = sales.filter(s=>s.date<=to);
+
+  const byFlight = {};
+  for(const s of sales){
+    if(!byFlight[s.flight]) byFlight[s.flight] = [];
+    byFlight[s.flight].push(s);
+  }
+  const codes = Object.keys(byFlight).sort();
+
+  document.getElementById("fltCount").textContent = codes.length + (codes.length===1?" flight":" flights");
+
+  const wrap = document.getElementById("flightsList");
+  if(!codes.length){
+    wrap.innerHTML = '<div class="empty"><div class="big">No data</div>No sales match this period.</div>';
+    return;
+  }
+
+  wrap.innerHTML = codes.map(code=>{
+    const salesList = byFlight[code].sort((a,b)=>a.seat.localeCompare(b.seat,undefined,{numeric:true}));
+    const total = salesList.reduce((a,s)=>a+s.total,0);
+    const subtotal = salesList.reduce((a,s)=>a+s.subtotal,0);
+    const discounts = salesList.reduce((a,s)=>a+s.combo+s.dfDisc,0);
+    const count = salesList.length;
+
+    // item breakdown
+    const agg = {};
+    for(const s of salesList){
+      for(const it of s.items){
+        const key = it.name + "|" + it.category;
+        if(!agg[key]) agg[key] = {name:it.name, category:it.category, qty:0, rev:0};
+        agg[key].qty += it.qty;
+        agg[key].rev += it.qty * it.unitPrice;
+      }
+    }
+    const breakdownRows = Object.values(agg).sort((a,b)=>b.rev-a.rev).map(g=>
+      '<tr><td><span class="badge '+g.category+'">'+esc(CAT_LABEL[g.category]||g.category)+'</span> &nbsp;'+esc(g.name)+'</td>'+
+      '<td class="r">'+g.qty+'</td><td class="r">'+money(g.rev)+'</td></tr>'
+    ).join("");
+
+    const saleRows = salesList.map(s=>
+      '<div class="stub" style="margin:10px 0 0">'+
+        '<div class="stub-top"><div class="stub-flt" style="font-size:15px">'+esc(s.flight)+'</div>'+
+        '<div class="stub-seat" style="font-size:13px"><span class="tag">Seat '+esc(s.seat)+'</span>'+fmtDate(s.date)+'</div></div>'+
+        '<div class="stub-body">'+s.items.map(it=>esc(it.name)+' ×'+it.qty+' @ '+money(it.unitPrice)).join("<br>")+
+          ((s.combo||s.dfDisc)?'<div class="stub-disc">Discounts: −'+money(s.combo+s.dfDisc)+'</div>':"")+
+        '</div>'+
+        '<div class="stub-total"><span class="lbl">Total</span><span class="amt">'+money(s.total)+'</span></div>'+
+      '</div>'
+    ).join("");
+
+    return (
+      '<div class="flight-card">'+
+        '<div class="flight-head">'+
+          '<span class="flight-code mono">'+esc(code)+'</span>'+
+          '<div class="flight-stats">'+
+            '<div class="stat"><div class="v">'+count+'</div><div class="k">Sales</div></div>'+
+            '<div class="stat"><div class="v">'+money(subtotal)+'</div><div class="k">Gross</div></div>'+
+            (discounts?'<div class="stat"><div class="v" style="color:var(--good)">−'+money(discounts)+'</div><div class="k">Discounts</div></div>':"")+
+            '<div class="stat"><div class="v" style="color:var(--gold-soft)">'+money(total)+'</div><div class="k">Net</div></div>'+
+          '</div>'+
+          '<span class="chevron">›</span>'+
+        '</div>'+
+        '<div class="flight-body">'+
+          '<div class="breakdown"><h4>Item breakdown</h4>'+
+            '<table><thead><tr><th>Item</th><th class="r">Qty</th><th class="r">Revenue</th></tr></thead><tbody>'+breakdownRows+'</tbody></table>'+
+          '</div>'+
+          '<div class="breakdown"><h4>Sales</h4>'+saleRows+'</div>'+
+        '</div>'+
+      '</div>'
+    );
+  }).join("");
+
+  wrap.querySelectorAll(".flight-head").forEach(h=>{
+    h.onclick = ()=>{ if(!h.closest(".flight-card").classList.contains("open")) h.closest(".flight-card").classList.add("open"); else h.closest(".flight-card").classList.remove("open"); };
+  });
+}
+
+/* ---------------- nav & render ---------------- */
+function switchView(name){
+  document.querySelectorAll("section.view").forEach(v=>v.classList.toggle("active", v.id==="view-"+name));
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active", b.dataset.view===name));
+  if(name==="sales") renderSales();
+  if(name==="flights") renderFlights();
+  if(name==="catalog") renderCatalog();
+}
+function renderAll(){
+  renderCatalog();
+  renderSales();
+  renderFlights();
+  document.getElementById("saleFlight").setAttribute("list","flightList");
+  const dl = document.getElementById("flightList");
+  dl.innerHTML = [...new Set(state.sales.map(s=>s.flight))].sort().map(f=>'<option value="'+esc(f)+'">').join("");
+  document.getElementById("footStat").textContent = state.sales.length + " sales recorded · " + state.catalog.length + " catalog items";
+}
+
+/* ---------------- init ---------------- */
+document.getElementById("nav").addEventListener("click", e=>{
+  const b = e.target.closest("button[data-view]");
+  if(b) switchView(b.dataset.view);
+});
+document.getElementById("addRow").onclick = ()=>addItemRow();
+document.getElementById("addCat").onclick = ()=>{
+  state.catalog.push({id:uid(), name:"New item", category:"other", price:0});
+  save(); renderCatalog();
+};
+document.getElementById("btnSave").onclick = saveSale;
+document.getElementById("btnClear").onclick = ()=>{ if(confirm("Clear the form?")) clearForm(); };
+document.getElementById("btnExportCatalog").onclick = exportCatalog;
+document.getElementById("importCatalogInput").onchange = (e)=>{ if(e.target.files[0]) importCatalog(e.target.files[0]); e.target.value=""; };
+document.getElementById("salesFlightFilter").onchange = ()=>renderSales();
+document.getElementById("fltFrom").onchange = ()=>renderFlights();
+document.getElementById("fltTo").onchange = ()=>renderFlights();
+document.getElementById("btnClearDates").onclick = ()=>{
+  document.getElementById("fltFrom").value = "";
+  document.getElementById("fltTo").value = "";
+  renderFlights();
+};
+
+clearForm();
+renderAll();
+
+/* ---------------- offline (service worker) ---------------- */
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js").then(reg=>{
+    console.log("SW registered", reg.scope);
+  }).catch(err=>{
+    console.log("SW registration failed", err);
+  });
+}
+</script>
+</body>
+</html>
