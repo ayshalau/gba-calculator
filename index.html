@@ -491,7 +491,7 @@ const DEFAULT_CATALOG = [
   {id:"msblag84r0xqy", name:"大洋牌魚肉腸", category:"snacks", price:35},
   {id:"msblagbsyib8f", name:"品客薯片（原味/香蔥酸忌廉味）", category:"snacks", price:25},
   {id:"msblffx45v062", name:"童星點心麵雞肉味", category:"snacks", price:20},
-  {id:"msblfg1uk2y1v", name:"怡寶純淨水 (沒有折扣)", category:"other", price:15},
+  {id:"msblfg1uk2y1v", name:"怡寶純淨水 (沒有折扣)", category:"water", price:15},
   {id:"msblfg6dlkiux", name:"伊藤園綠茶", category:"drink", price:30},
   {id:"msblfgavpgrmc", name:"津露烏龍茶", category:"drink", price:30},
   {id:"msbli5et8fjbt", name:"檸檬片加冰 (Add-On)", category:"other", price:5},
@@ -553,7 +553,7 @@ const DEFAULT_CATALOG = [
   {id:"msbn6kja3suhf", name:"Premium Class Upgrade", category:"seats", price:500}
 ];
 
-const CATALOG_VERSION = 3;
+const CATALOG_VERSION = 4;
 
 let state = load() || { catalog:[], sales:[] };
 if (!state.catalog || !state.catalog.length || (state.catalogVersion || 1) < CATALOG_VERSION) { state.catalog = DEFAULT_CATALOG.slice(); state.catalogVersion = CATALOG_VERSION; save(); }
