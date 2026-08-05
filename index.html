@@ -119,29 +119,6 @@
     color:var(--ink);font-family:inherit;font-size:14px;padding:9px 10px;width:100%;outline:none;
   }
   .item-row select:focus,.item-row input:focus{border-color:var(--accent)}
-  .r-picker{position:relative}
-  .r-search{width:100%;font-size:14px}
-  .r-dropdown{
-    position:absolute;top:100%;left:0;right:0;z-index:50;
-    max-height:260px;overflow-y:auto;
-    background:var(--panel);border:1px solid var(--line);border-radius:8px;
-    box-shadow:0 4px 16px rgba(23,58,63,.15);display:none;
-  }
-  .r-dropdown.open{display:block}
-  .r-drop-item{
-    display:flex;align-items:center;gap:8px;
-    padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--panel-2);
-    font-size:14px;
-  }
-  .r-drop-item:last-child{border-bottom:none}
-  .r-drop-item:hover,.r-drop-item.hover{background:var(--panel-2)}
-  .r-drop-item .drop-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .r-drop-item .drop-price{font-size:13px;color:var(--muted);white-space:nowrap}
-  .r-drop-group{
-    font-size:11px;padding:6px 10px;color:var(--muted);text-transform:uppercase;
-    letter-spacing:.08em;background:var(--panel-2);font-weight:600;
-  }
-  .r-drop-custom{border-top:2px solid var(--line);color:var(--gold-soft);font-weight:600}
   .item-row .price-wrap{position:relative}
   .item-row .price-wrap .cur{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none}
   .item-row .price-wrap input{padding-left:34px}
@@ -320,7 +297,7 @@
     nav{width:100%}
     nav button{flex:1;text-align:center;padding:10px 6px 11px;font-size:13px}
     .item-row{grid-template-columns:1fr 1fr 34px}
-    .item-row .r-picker{grid-column:1 / span 3}
+    .item-row .r-item{grid-column:1 / span 3}
     .item-row .r-name{grid-column:1 / span 3}
     .custom-fields{grid-column:1 / span 3}
     .item-row .r-qty{min-width:0}
@@ -730,123 +707,45 @@ function importCatalog(file){
 }
 
 /* ---------------- log sale form ---------------- */
+function catalogOptions(selectedId){
+  let html = '<option value="">— choose item —</option>';
+  for(const c of CATS){
+    const group = state.catalog.filter(i=>i.category===c);
+    if(!group.length) continue;
+    html += '<optgroup label="'+esc(CAT_LABEL[c])+'">';
+    for(const it of group){
+      html += '<option value="'+it.id+'"'+(it.id===selectedId?' selected':'')+'>'+esc(it.name)+' &middot; '+money(it.price)+'</option>';
+    }
+    html += '</optgroup>';
+  }
+  html += '<option value="__custom">+ Custom item…</option>';
+  return html;
+}
+
 function addItemRow(item){
   const rows = document.getElementById("itemRows");
   const row = document.createElement("div");
   row.className = "item-row";
   row.innerHTML =
-    '<div class="r-picker">'+
-      '<input type="text" class="r-search" placeholder="Search or type item…" autocomplete="off" value="">'+
-      '<input type="hidden" class="r-item" value="">'+
-      '<div class="r-dropdown"></div>'+
-    '</div>'+
+    '<select class="r-item">'+catalogOptions(item?item.catId:"")+'</select>'+
     '<input type="number" class="r-qty" min="1" value="'+(item?item.qty:1)+'">'+
     '<div class="price-wrap"><span class="cur">HK$</span><input type="number" class="r-price" min="0" step="0.1" value="'+(item?item.unitPrice:"")+'"></div>'+
     '<span class="line-total">HK$0.00</span>'+
     '<button class="row-del" title="Remove">×</button>'+
     '<div class="custom-fields hidden">'+
-      '<input type="text" class="r-name" placeholder="Item name" value="'+(item&&(item.customName||item.custom)?esc(item.name||""):"")+'">'+
-      '<select class="r-cat">'+CATS.map(c=>'<option value="'+c+'"'+(item&&item.category===c?' selected':'')+'>'+esc(CAT_LABEL[c])+'</option>').join("")+'</select>'+
+      '<input type="text" class="r-name" placeholder="Item name" value="'+(item&&item.customName?esc(item.customName):"")+'">'+
+      '<select class="r-cat">'+CATS.map(c=>'<option value="'+c+'">'+esc(CAT_LABEL[c])+'</option>').join("")+'</select>'+
     '</div>';
-  const picker = row.querySelector(".r-picker");
-  const searchInput = row.querySelector(".r-search");
-  const hiddenSel = row.querySelector(".r-item");
-  const dropdown = row.querySelector(".r-dropdown");
+  const wrap = row.querySelector(".price-wrap");
+  const priceWrapSel = row.querySelector(".r-item");
   const cf = row.querySelector(".custom-fields");
 
-  if(item){
-    if(item.catId === "__custom"){
-      hiddenSel.value = "__custom";
-      searchInput.value = "Custom";
-      cf.classList.remove("hidden");
-    } else if(item.catId){
-      hiddenSel.value = item.catId;
-      searchInput.value = item.customName || item.name || "";
-    }
-  }
-
-  function buildDropdown(filter){
-    dropdown.innerHTML = "";
-    if(!filter) filter = "";
-    const lf = filter.toLowerCase();
-    let visible = 0;
-    for(const c of CATS){
-      const items = state.catalog.filter(i=>i.category===c && i.name.toLowerCase().includes(lf));
-      if(!items.length) continue;
-      const grp = document.createElement("div");
-      grp.className = "r-drop-group";
-      grp.textContent = CAT_LABEL[c];
-      dropdown.appendChild(grp);
-      for(const it of items){
-        const di = document.createElement("div");
-        di.className = "r-drop-item";
-        di.dataset.id = it.id;
-        di.innerHTML = '<span class="badge '+it.category+'">'+esc(CAT_LABEL[it.category]||it.category)+'</span>'+
-                       '<span class="drop-name">'+esc(it.name)+'</span>'+
-                       '<span class="drop-price">'+money(it.price)+'</span>';
-        di.onmousedown = (e)=>{ e.preventDefault(); selectItem(it.id, it.name, it.price); };
-        dropdown.appendChild(di);
-        visible++;
-      }
-    }
-    const customDiv = document.createElement("div");
-    customDiv.className = "r-drop-item r-drop-custom";
-    customDiv.innerHTML = '<span class="drop-name">+ Custom item</span>';
-    customDiv.onmousedown = (e)=>{ e.preventDefault(); selectCustom(); };
-    dropdown.appendChild(customDiv);
-    dropdown.classList.toggle("open", visible>0 || !filter);
-  }
-
-  function selectItem(id, name, price){
-    hiddenSel.value = id;
-    searchInput.value = name;
-    row.querySelector(".r-price").value = price;
-    cf.classList.add("hidden");
-    dropdown.classList.remove("open");
-    refresh();
-  }
-
-  function selectCustom(){
-    hiddenSel.value = "__custom";
-    searchInput.value = "Custom";
-    cf.classList.remove("hidden");
-    dropdown.classList.remove("open");
-    if(row.querySelector(".r-name").value==="") row.querySelector(".r-name").focus();
-    refresh();
-  }
-
-  searchInput.onfocus = ()=>{
-    if(hiddenSel.value && hiddenSel.value !== "__custom"){
-      hiddenSel.value = "";
-      searchInput.value = "";
-    }
-    if(dropdown.classList.contains("open")) return;
-    buildDropdown(searchInput.value);
-  };
-  searchInput.oninput = ()=>{
-    if(hiddenSel.value && hiddenSel.value !== "__custom"){
-      hiddenSel.value = "";
-    }
-    buildDropdown(searchInput.value);
-  };
-  searchInput.onkeydown = (e)=>{
-    if(e.key==="Escape"){ dropdown.classList.remove("open"); searchInput.blur(); }
-  };
-  searchInput.onblur = ()=>{
-    setTimeout(()=>{
-      dropdown.classList.remove("open");
-      if(hiddenSel.value==="__custom" && searchInput.value==="Custom") return;
-      if(!hiddenSel.value) searchInput.value = "";
-    }, 150);
-  };
-
   function readRow(){
-    const sel = hiddenSel.value;
+    const sel = row.querySelector(".r-item").value;
     const qty = parseInt(row.querySelector(".r-qty").value,10)||0;
     const price = parseFloat(row.querySelector(".r-price").value);
     if(sel && sel!=="__custom"){
       const it = itemById(sel);
-      if(!it) return null;
       return { name:it.name, category:it.category, qty, unitPrice:isNaN(price)?it.price:price, custom:false };
     }
     if(sel==="__custom"){
@@ -866,17 +765,26 @@ function addItemRow(item){
     renderCalc();
   }
 
-  document.addEventListener("click", function closePick(e){
-    if(!row.parentNode){ document.removeEventListener("click", closePick); return; }
-    if(!picker.contains(e.target)) dropdown.classList.remove("open");
-  });
-
+  priceWrapSel.onchange = ()=>{
+    const v = priceWrapSel.value;
+    const showCustom = v==="__custom";
+    cf.classList.toggle("hidden", !showCustom);
+    if(!showCustom && v){
+      const it = itemById(v);
+      row.querySelector(".r-price").value = it.price;
+    }
+    refresh();
+  };
   row.querySelector(".r-qty").oninput = refresh;
   row.querySelector(".r-price").oninput = refresh;
   row.querySelector(".r-name").oninput = refresh;
   row.querySelector(".r-cat").onchange = refresh;
   row.querySelector(".row-del").onclick = ()=>{ row.remove(); renderCalc(); };
 
+  if(item && item.catId==="__custom"){
+    priceWrapSel.value = "__custom";
+    cf.classList.remove("hidden");
+  }
   rows.appendChild(row);
   refresh();
 }
