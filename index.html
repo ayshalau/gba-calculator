@@ -714,7 +714,6 @@ function categoryOptions(selected){
   for(const c of CATS){
     html += '<option value="'+c+'"'+(c===selected?' selected':'')+'>'+esc(CAT_LABEL[c])+'</option>';
   }
-  html += '<option value="__custom">+ Custom item…</option>';
   return html;
 }
 function itemOptions(cat, selectedId){
@@ -732,7 +731,7 @@ function addItemRow(item){
   const rows = document.getElementById("itemRows");
   const row = document.createElement("div");
   row.className = "item-row";
-  const initCat = item ? (item.catId==="__custom" ? "__custom" : item.category) : "";
+  const initCat = item ? item.category : "";
   row.innerHTML =
     '<div class="cat-item-row">'+
       '<select class="r-cat-pick">'+categoryOptions(initCat)+'</select>'+
@@ -777,17 +776,10 @@ function addItemRow(item){
 
   catPick.onchange = ()=>{
     const cat = catPick.value;
-    if(cat === "__custom"){
-      itemSel.innerHTML = '<option value="__custom">Custom item</option>';
-      itemSel.value = "__custom";
-      cf.classList.remove("hidden");
-    } else {
-      itemSel.innerHTML = itemOptions(cat, "");
-      cf.classList.add("hidden");
-      if(itemSel.options.length > 1){ itemSel.selectedIndex = 1; }
-    }
+    itemSel.innerHTML = itemOptions(cat, "");
+    if(itemSel.options.length > 1){ itemSel.selectedIndex = 1; }
     const selId = itemSel.value;
-    if(selId && selId !== "__custom"){
+    if(selId){
       const it = itemById(selId);
       if(it) row.querySelector(".r-price").value = it.price;
     }
@@ -795,7 +787,7 @@ function addItemRow(item){
   };
   itemSel.onchange = ()=>{
     const v = itemSel.value;
-    if(v && v !== "__custom"){
+    if(v){
       const it = itemById(v);
       if(it) row.querySelector(".r-price").value = it.price;
     }
@@ -807,9 +799,6 @@ function addItemRow(item){
   row.querySelector(".r-cat").onchange = refresh;
   row.querySelector(".row-del").onclick = ()=>{ row.remove(); renderCalc(); };
 
-  if(item && item.catId==="__custom"){
-    cf.classList.remove("hidden");
-  }
   rows.appendChild(row);
   refresh();
 }
