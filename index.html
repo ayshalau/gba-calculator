@@ -245,6 +245,7 @@
   .badge.meal{color:var(--gold-soft);border-color:rgba(176,122,30,.45);background:rgba(176,122,30,.08)}
   .badge.duty-free{color:#1d6b44;border-color:rgba(46,125,79,.45);background:rgba(46,125,79,.08)}
   .badge.other{color:var(--muted)}
+  .badge.water{color:#1b6e8a;border-color:rgba(27,110,138,.45);background:rgba(27,110,138,.08)}
   .badge.seats{color:#0f7f88;border-color:rgba(15,127,136,.45);background:rgba(15,127,136,.08)}
   .badge.snacks{color:#9a6a00;border-color:rgba(154,106,0,.45);background:rgba(154,106,0,.08)}
   .badge.gba{color:#173a3f;border-color:rgba(161,227,230,.8);background:rgba(161,227,230,.35)}
@@ -459,11 +460,12 @@
 
 /* ---------------- data ---------------- */
 const KEY = "cabinlog.v1";
-const CATS = ["drink","meal","snacks","duty-free","seats","gba","special","emperor","other"];
+const CATS = ["drink","meal","snacks","duty-free","seats","gba","special","emperor","water","other"];
 
 const CAT_LABEL = {
   drink:"Drink",meal:"Meal",snacks:"Snacks","duty-free":"Duty-free",other:"Other",
-  seats:"Seats",gba:"GBA Products",special:"Special Offer",emperor:"Emperor Jewellery Products"
+  seats:"Seats",gba:"GBA Products",special:"Special Offer",emperor:"Emperor Jewellery Products",
+  water:"Water"
 };
 const DEFAULT_CATALOG = [
   {id:"i6", name:"火腿炒蛋芝士脆皮三文治", category:"meal", price:60},
