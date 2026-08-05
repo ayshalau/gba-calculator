@@ -114,6 +114,7 @@
     display:grid;grid-template-columns:minmax(180px,1.6fr) 84px 120px 110px 34px;
     gap:10px;align-items:center;margin-bottom:10px;
   }
+  .cat-item-row{display:grid;grid-template-columns:100px 1fr;gap:6px}
   .item-row select,.item-row input{
     background:var(--panel-2);border:1px solid var(--line);border-radius:8px;
     color:var(--ink);font-family:inherit;font-size:14px;padding:9px 10px;width:100%;outline:none;
@@ -269,6 +270,7 @@
     nav button{padding:9px 12px 11px;font-size:13px}
     .cols-head{display:none}
     .item-row{grid-template-columns:1fr 74px 1fr 32px}
+    .cat-item-row{grid-template-columns:80px 1fr;gap:4px}
     .item-row .line-total{display:none}
     .custom-fields{grid-template-columns:1fr}
     .cat-row{grid-template-columns:1fr 110px 1fr}
@@ -297,7 +299,7 @@
     nav{width:100%}
     nav button{flex:1;text-align:center;padding:10px 6px 11px;font-size:13px}
     .item-row{grid-template-columns:1fr 1fr 34px}
-    .item-row .r-item{grid-column:1 / span 3}
+    .item-row .cat-item-row{grid-column:1 / span 3}
     .item-row .r-name{grid-column:1 / span 3}
     .custom-fields{grid-column:1 / span 3}
     .item-row .r-qty{min-width:0}
@@ -707,18 +709,22 @@ function importCatalog(file){
 }
 
 /* ---------------- log sale form ---------------- */
-function catalogOptions(selectedId){
-  let html = '<option value="">— choose item —</option>';
+function categoryOptions(selected){
+  let html = '<option value="">— category —</option>';
   for(const c of CATS){
-    const group = state.catalog.filter(i=>i.category===c);
-    if(!group.length) continue;
-    html += '<optgroup label="'+esc(CAT_LABEL[c])+'">';
-    for(const it of group){
-      html += '<option value="'+it.id+'"'+(it.id===selectedId?' selected':'')+'>'+esc(it.name)+' &middot; '+money(it.price)+'</option>';
-    }
-    html += '</optgroup>';
+    html += '<option value="'+c+'"'+(c===selected?' selected':'')+'>'+esc(CAT_LABEL[c])+'</option>';
   }
   html += '<option value="__custom">+ Custom item…</option>';
+  return html;
+}
+function itemOptions(cat, selectedId){
+  let html = '<option value="">— choose item —</option>';
+  if(cat){
+    const items = state.catalog.filter(i=>i.category===cat);
+    for(const it of items){
+      html += '<option value="'+it.id+'"'+(it.id===selectedId?' selected':'')+'>'+esc(it.name)+' &middot; '+money(it.price)+'</option>';
+    }
+  }
   return html;
 }
 
@@ -726,8 +732,12 @@ function addItemRow(item){
   const rows = document.getElementById("itemRows");
   const row = document.createElement("div");
   row.className = "item-row";
+  const initCat = item ? (item.catId==="__custom" ? "__custom" : item.category) : "";
   row.innerHTML =
-    '<select class="r-item">'+catalogOptions(item?item.catId:"")+'</select>'+
+    '<div class="cat-item-row">'+
+      '<select class="r-cat-pick">'+categoryOptions(initCat)+'</select>'+
+      '<select class="r-item">'+itemOptions(initCat, item?item.catId:"")+'</select>'+
+    '</div>'+
     '<input type="number" class="r-qty" min="1" value="'+(item?item.qty:1)+'">'+
     '<div class="price-wrap"><span class="cur">HK$</span><input type="number" class="r-price" min="0" step="0.1" value="'+(item?item.unitPrice:"")+'"></div>'+
     '<span class="line-total">HK$0.00</span>'+
@@ -736,8 +746,8 @@ function addItemRow(item){
       '<input type="text" class="r-name" placeholder="Item name" value="'+(item&&item.customName?esc(item.customName):"")+'">'+
       '<select class="r-cat">'+CATS.map(c=>'<option value="'+c+'">'+esc(CAT_LABEL[c])+'</option>').join("")+'</select>'+
     '</div>';
-  const wrap = row.querySelector(".price-wrap");
-  const priceWrapSel = row.querySelector(".r-item");
+  const catPick = row.querySelector(".r-cat-pick");
+  const itemSel = row.querySelector(".r-item");
   const cf = row.querySelector(".custom-fields");
 
   function readRow(){
@@ -765,13 +775,29 @@ function addItemRow(item){
     renderCalc();
   }
 
-  priceWrapSel.onchange = ()=>{
-    const v = priceWrapSel.value;
-    const showCustom = v==="__custom";
-    cf.classList.toggle("hidden", !showCustom);
-    if(!showCustom && v){
+  catPick.onchange = ()=>{
+    const cat = catPick.value;
+    if(cat === "__custom"){
+      itemSel.innerHTML = '<option value="__custom">Custom item</option>';
+      itemSel.value = "__custom";
+      cf.classList.remove("hidden");
+    } else {
+      itemSel.innerHTML = itemOptions(cat, "");
+      cf.classList.add("hidden");
+      if(itemSel.options.length > 1){ itemSel.selectedIndex = 1; }
+    }
+    const selId = itemSel.value;
+    if(selId && selId !== "__custom"){
+      const it = itemById(selId);
+      if(it) row.querySelector(".r-price").value = it.price;
+    }
+    refresh();
+  };
+  itemSel.onchange = ()=>{
+    const v = itemSel.value;
+    if(v && v !== "__custom"){
       const it = itemById(v);
-      row.querySelector(".r-price").value = it.price;
+      if(it) row.querySelector(".r-price").value = it.price;
     }
     refresh();
   };
@@ -782,7 +808,6 @@ function addItemRow(item){
   row.querySelector(".row-del").onclick = ()=>{ row.remove(); renderCalc(); };
 
   if(item && item.catId==="__custom"){
-    priceWrapSel.value = "__custom";
     cf.classList.remove("hidden");
   }
   rows.appendChild(row);
