@@ -995,51 +995,43 @@ function editSale(id){
 
 function openPdf(s){
   const itemsHtml = s.items.map(it=>
-    '<tr><td>'+esc(it.name)+'</td><td style="text-align:right">'+it.qty+'</td><td style="text-align:right">'+money(it.unitPrice)+'</td><td style="text-align:right">'+money(it.qty*it.unitPrice)+'</td></tr>'
+    '<tr><td>'+esc(it.name)+'</td><td style="text-align:right">'+it.qty+'</td><td style="text-align:right">'+money(it.qty*it.unitPrice)+'</td></tr>'
   ).join("");
   let discHtml = "";
-  if(s.combo) discHtml += '<tr><td style="text-align:right" colspan="3">Combo ×'+(s.combo/10)+' (meal/snacks + drink)</td><td style="text-align:right">−'+money(s.combo)+'</td></tr>';
-  if(s.dfDisc) discHtml += '<tr><td style="text-align:right" colspan="3">Duty-free 20% off</td><td style="text-align:right">−'+money(s.dfDisc)+'</td></tr>';
+  if(s.combo) discHtml += '<tr><td colspan="2">Combo ×'+(s.combo/10)+' (meal/snacks+drink)</td><td style="text-align:right">−'+money(s.combo)+'</td></tr>';
+  if(s.dfDisc) discHtml += '<tr><td colspan="2">Duty-free 20% off</td><td style="text-align:right">−'+money(s.dfDisc)+'</td></tr>';
 
   const html =
-    '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Sale ' + esc(s.flight) + ' ' + esc(s.seat) + '</title>' +
+    '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Receipt ' + esc(s.flight) + ' ' + esc(s.seat) + '</title>' +
     '<style>' +
-      '@page{margin:12mm}' +
-      'body{font-family:Arial,Helvetica,sans-serif;color:#173a3f;margin:0;padding:0}' +
-      '.sheet{max-width:640px;margin:0 auto}' +
-      '.head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #A1E3E6;padding-bottom:10px}' +
-      '.brand{font-size:20px;font-weight:700;color:#0a5c63}' +
-      '.brand small{display:block;font-size:11px;font-weight:400;color:#5f7d80;letter-spacing:.12em;text-transform:uppercase}' +
-      '.flt{font-size:28px;font-weight:700;color:#173a3f}' +
-      '.meta{display:flex;gap:24px;margin:14px 0;font-size:14px}' +
-      '.meta b{color:#0a5c63}' +
-      'table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}' +
-      'th{text-align:left;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#5f7d80;border-bottom:1px solid #b7dadd;padding:6px 0;font-weight:400}' +
-      'td{border-bottom:1px solid #e3eef0;padding:8px 0}' +
-      '.total{display:flex;justify-content:space-between;align-items:center;border-top:2px solid #A1E3E6;margin-top:14px;padding-top:12px}' +
-      '.total .lbl{font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:#5f7d80}' +
-      '.total .amt{font-size:28px;font-weight:700;color:#0a5c63}' +
-      '.foot{margin-top:28px;font-size:11px;color:#5f7d80;text-align:center}' +
-      '@media print{body{margin:0}.sheet{max-width:100%}.close-btn{display:none}}' +
-      '.close-btn{position:fixed;top:12px;left:12px;z-index:99;background:#0a5c63;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:15px;font-family:Arial,sans-serif;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)}' +
-      '.close-btn:active{opacity:.8}' +
+      '@page{margin:3mm;size:55mm auto}' +
+      '*{box-sizing:border-box}' +
+      'body{font-family:Arial,Helvetica,sans-serif;color:#173a3f;margin:0;padding:0;font-size:11px;line-height:1.4}' +
+      '.strip{max-width:55mm;margin:0 auto}' +
+      '.store{text-align:center;font-size:13px;font-weight:700;color:#0a5c63;margin-bottom:6px}' +
+      '.info{display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px}' +
+      '.info b{color:#0a5c63}' +
+      'hr{border:none;border-top:1px dashed #b7dadd;margin:6px 0}' +
+      'table{width:100%;border-collapse:collapse;font-size:10px}' +
+      'td{padding:2px 0;vertical-align:top}' +
+      '.total{margin-top:6px;padding-top:4px;border-top:1px dashed #0a5c63}' +
+      '.total-row{display:flex;justify-content:space-between;font-size:14px;font-weight:700;color:#0a5c63}' +
+      '.foot{text-align:center;font-size:9px;color:#5f7d80;margin-top:8px}' +
+      '.close-btn{display:none}' +
+      '@media print{body{margin:0}}' +
     '</style></head><body>' +
-    '<button class="close-btn" onclick="window.close()" title="Close">&larr; Back</button>' +
-    '<div class="sheet">' +
-      '<div class="head"><div class="brand">GBA Calculator<small>flight sales &middot; HKD</small></div><div class="flt">'+esc(s.flight)+'</div></div>' +
-      '<div class="meta">' +
-        '<span><b>Seat</b> &nbsp;'+esc(s.seat)+'</span>' +
-        '<span><b>Date</b> &nbsp;'+fmtDate(s.date)+'</span>' +
-        '<span><b>Items</b> &nbsp;'+s.items.reduce((a,i)=>a+i.qty,0)+'</span>' +
-        (s.payment ? '<span><b>Payment</b> &nbsp;'+esc(s.payment)+'</span>' : '')+
-      '</div>' +
-      '<table><thead><tr><th>Item</th><th style="text-align:right">Qty</th><th style="text-align:right">Unit price</th><th style="text-align:right">Total</th></tr></thead>' +
-      '<tbody>'+itemsHtml+discHtml+'</tbody></table>' +
-      '<div class="total"><span class="lbl">Total due</span><span class="amt">'+money(s.total)+'</span></div>' +
-      '<div class="foot">GBA Calculator — flight sales record</div>' +
+    '<div class="strip">' +
+      '<div class="store">GBA Calculator</div>' +
+      '<div class="info"><span><b>Flight</b> '+esc(s.flight)+'</span><span><b>Seat</b> '+esc(s.seat)+'</span></div>' +
+      '<div class="info"><span><b>Date</b> '+fmtDate(s.date)+'</span>'+(s.payment?'<span><b>Pay</b> '+esc(s.payment)+'</span>':'')+'</div>' +
+      '<hr>' +
+      '<table><tbody>'+itemsHtml+discHtml+'</tbody></table>' +
+      '<hr>' +
+      '<div class="total"><div class="total-row"><span>TOTAL</span><span>'+money(s.total)+'</span></div></div>' +
+      '<div class="foot">Flight sales receipt</div>' +
     '</div><script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/script></body></html>';
 
-  const w = window.open("", "_blank", "width=760,height=920");
+  const w = window.open("", "_blank", "width=380,height=640");
   if(!w){ toast("Please allow pop-ups for this app."); return; }
   w.document.write(html);
   w.document.close();
