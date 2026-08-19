@@ -251,6 +251,7 @@
   .badge.gba{color:#173a3f;border-color:rgba(161,227,230,.8);background:rgba(161,227,230,.35)}
   .badge.special{color:#a0561a;border-color:rgba(176,94,26,.45);background:rgba(176,94,26,.1)}
   .badge.emperor{color:#7a2456;border-color:rgba(122,36,86,.45);background:rgba(122,36,86,.08)}
+  .badge.flash-sales{color:#b91c1c;border-color:rgba(185,28,28,.45);background:rgba(185,28,28,.1)}
 
   /* ---------- responsive ---------- */
   @media (max-width:1024px){
@@ -460,12 +461,12 @@
 
 /* ---------------- data ---------------- */
 const KEY = "cabinlog.v1";
-const CATS = ["water","drink","meal","snacks","duty-free","seats","gba","special","emperor","other"];
+const CATS = ["flash-sales","water","drink","meal","snacks","duty-free","seats","gba","special","emperor","other"];
 
 const CAT_LABEL = {
   drink:"Drink",meal:"Meal",snacks:"Snacks","duty-free":"Duty-free",other:"Other",
   seats:"Seats",gba:"GBA Products",special:"Special Offer",emperor:"Emperor Jewellery Products",
-  water:"Water"
+  water:"Water","flash-sales":"Flash Sales"
 };
 const DEFAULT_CATALOG = [
   {id:"i6", name:"火腿炒蛋芝士脆皮三文治", category:"meal", price:60},
@@ -596,20 +597,37 @@ function toast(msg){
 
 /* ---------------- totals ---------------- */
 function computeTotals(items){
-  let subtotal=0, dfSub=0, drinkQty=0, mealQty=0, snacksQty=0;
+  let subtotal=0, dfSub=0, drinkQty=0, mealQty=0, snacksQty=0, flashQty=0, flashSub=0;
   for(const it of items){
-    const line = (Number(it.qty)||0) * (Number(it.unitPrice)||0);
+    const qty = Number(it.qty)||0;
+    const price = Number(it.unitPrice)||0;
+    const line = qty * price;
     subtotal += line;
-    if(it.category==="drink") drinkQty += Number(it.qty)||0;
-    if(it.category==="meal") mealQty += Number(it.qty)||0;
-    if(it.category==="snacks") snacksQty += Number(it.qty)||0;
+    if(it.category==="drink") drinkQty += qty;
+    if(it.category==="meal") mealQty += qty;
+    if(it.category==="snacks") snacksQty += qty;
     if(it.category==="duty-free") dfSub += line;
+    if(it.category==="flash-sales"){ flashQty += qty; flashSub += line; }
   }
   const pairs = Math.min(drinkQty, mealQty + snacksQty);
   const combo = pairs * 10;
   const dfDisc = dfSub >= 1500 ? Math.round((dfSub*0.2 + Number.EPSILON)*100)/100 : 0;
-  const total = Math.max(0, Math.round((subtotal - combo - dfDisc + Number.EPSILON)*100)/100);
-  return { subtotal, combo, dfDisc, dfSub, drinkQty, mealQty, snacksQty, pairs, total };
+  const flashPairs = Math.floor(flashQty / 2);
+  const flashOdd = flashQty - flashPairs * 2;
+  let flashDealCost = flashPairs * 30;
+  let oddRemaining = flashOdd;
+  for(const it of items){
+    if(oddRemaining<=0) break;
+    if(it.category!=="flash-sales") continue;
+    const qty = Number(it.qty)||0;
+    const price = Number(it.unitPrice)||0;
+    const take = Math.min(qty, oddRemaining);
+    flashDealCost += take * price;
+    oddRemaining -= take;
+  }
+  const flashDisc = Math.max(0, Math.round((flashSub - flashDealCost + Number.EPSILON)*100)/100);
+  const total = Math.max(0, Math.round((subtotal - combo - dfDisc - flashDisc + Number.EPSILON)*100)/100);
+  return { subtotal, combo, dfDisc, dfSub, drinkQty, mealQty, snacksQty, pairs, flashQty, flashPairs, flashDisc, total };
 }
 
 /* ---------------- catalog ---------------- */
@@ -831,6 +849,9 @@ function renderCalc(){
 
   const box = document.getElementById("discLines");
   box.innerHTML = "";
+  if(t.flashPairs>0 || t.flashQty>0){
+    box.innerHTML += '<div class="line disc'+(t.flashDisc?'':' zero')+'"><span>Flash Sales '+t.flashPairs+'× pair (HK$30 for 2)</span><b>−'+money(t.flashDisc)+'</b></div>';
+  }
   if(t.pairs>0){
     box.innerHTML += '<div class="line disc'+(t.combo?'':' zero')+'"><span>Combo '+t.pairs+'× (meal or snacks + drink, −HK$10 each)</span><b>−'+money(t.combo)+'</b></div>';
   }else if(t.drinkQty>0 && (t.mealQty>0 || t.snacksQty>0)){
@@ -867,7 +888,7 @@ function saveSale(){
     date, flight, seat,
     items,
     payment: payment || "",
-    subtotal:t.subtotal, combo:t.combo, dfDisc:t.dfDisc, total:t.total,
+    subtotal:t.subtotal, combo:t.combo, dfDisc:t.dfDisc, flashDisc:t.flashDisc, total:t.total,
     createdAt: editingId ? (state.sales.find(s=>s.id===editingId)||{}).createdAt : Date.now()
   };
 
@@ -928,6 +949,7 @@ function renderSales(){
     let discHtml = "";
     if(s.combo) discHtml += '<div class="stub-disc">Combo ×'+(s.combo/10)+' (meal/snacks + drink): −'+money(s.combo)+'</div>';
     if(s.dfDisc) discHtml += '<div class="stub-disc">Duty-free 20% off: −'+money(s.dfDisc)+'</div>';
+    if(s.flashDisc) discHtml += '<div class="stub-disc">Flash Sales (2 for HK$30): −'+money(s.flashDisc)+'</div>';
     return (
       '<div class="stub" data-id="'+s.id+'">'+
         '<div class="stub-actions">'+
@@ -1000,6 +1022,7 @@ function openPdf(s){
   let discHtml = "";
   if(s.combo) discHtml += '<tr><td colspan="2">Combo ×'+(s.combo/10)+' (meal/snacks+drink)</td><td style="text-align:right">−'+money(s.combo)+'</td></tr>';
   if(s.dfDisc) discHtml += '<tr><td colspan="2">Duty-free 20% off</td><td style="text-align:right">−'+money(s.dfDisc)+'</td></tr>';
+  if(s.flashDisc) discHtml += '<tr><td colspan="2">Flash Sales (2 for HK$30)</td><td style="text-align:right">−'+money(s.flashDisc)+'</td></tr>';
 
   const html =
     '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Receipt ' + esc(s.flight) + ' ' + esc(s.seat) + '</title>' +
@@ -1064,7 +1087,7 @@ function renderFlights(){
     const salesList = byFlight[code].sort((a,b)=>a.seat.localeCompare(b.seat,undefined,{numeric:true}));
     const total = salesList.reduce((a,s)=>a+s.total,0);
     const subtotal = salesList.reduce((a,s)=>a+s.subtotal,0);
-    const discounts = salesList.reduce((a,s)=>a+s.combo+s.dfDisc,0);
+    const discounts = salesList.reduce((a,s)=>a+s.combo+s.dfDisc+(s.flashDisc||0),0);
     const count = salesList.length;
 
     // item breakdown
@@ -1090,7 +1113,7 @@ function renderFlights(){
         (s.payment ? '<div class="stub-meta"><span class="tag">Payment</span>'+esc(s.payment)+'</div>' : '')+
         '</div>'+
         '<div class="stub-body">'+s.items.map(it=>esc(it.name)+' ×'+it.qty+' @ '+money(it.unitPrice)).join("<br>")+
-          ((s.combo||s.dfDisc)?'<div class="stub-disc">Discounts: −'+money(s.combo+s.dfDisc)+'</div>':"")+
+          ((s.combo||s.dfDisc||s.flashDisc)?'<div class="stub-disc">Discounts: −'+money(s.combo+s.dfDisc+(s.flashDisc||0))+'</div>':"")+
         '</div>'+
         '<div class="stub-total"><span class="lbl">Total</span><span class="amt">'+money(s.total)+'</span></div>'+
       '</div>'
